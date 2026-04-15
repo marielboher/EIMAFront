@@ -23,6 +23,11 @@
   text-align: left;
 }
 
+.authCardCompact {
+  width: 300px;
+  padding: 20px;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -45,6 +50,72 @@
   font-size: 13px;
   color: #6b6b68;
   margin-bottom: 18px;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-bottom: 10px;
+}
+
+.pillPaso1 {
+  background: rgba(43, 108, 176, 0.12);
+  color: #2b6cb0;
+}
+.pillPaso2 {
+  background: rgba(27, 158, 119, 0.12);
+  color: #1b9e77;
+}
+.pillPaso3 {
+  background: rgba(244, 160, 36, 0.18);
+  color: #8a5a00;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c2c2a;
+  margin-bottom: 3px;
+}
+
+.cardSubtle {
+  font-size: 12px;
+  color: #6b6b68;
+  margin-bottom: 12px;
+}
+
+.successBox {
+  background: rgba(27, 158, 119, 0.12);
+  border: 0.5px solid #1b9e77;
+  border-radius: 8px;
+  padding: 11px 12px;
+  font-size: 13px;
+  color: #1b9e77;
+  margin-bottom: 8px;
+}
+
+.note {
+  font-size: 11px;
+  color: #6b6b68;
+}
+
+.tagline {
+  font-size: 11px;
+  color: #a0a09d;
+  margin: -10px 0 18px;
+}
+
+.alert {
+  background: #fdecea;
+  border: 0.5px solid #d7263d;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #d7263d;
+  margin-bottom: 12px;
 }
 
 .grid2 {
@@ -174,5 +245,23 @@
   border-radius: 10px;
   font-size: 13px;
   margin-bottom: 12px;
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6b6b68;
+}
+
+.foot a {
+  color: #2b6cb0;
+  text-decoration: none;
+}
+
+.foot a:hover {
+  text-decoration: underline;
 }
 

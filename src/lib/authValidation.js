@@ -18,3 +18,27 @@ export function requisitosContrasenaIncumplidos(contrasena) {
     mensajes.push('La contraseña debe incluir al menos un carácter especial (por ejemplo: !@#$%&*).')
   return mensajes
 }
+
+/**
+ * Estimación local (fallback) de fortaleza.
+ * Devuelve el mismo shape que la API: { nivel, descripcion }.
+ */
+export function calcularFortalezaLocal(contrasena) {
+  if (!contrasena || !contrasena.trim()) return { nivel: 'muyDebil', descripcion: 'Muy débil' }
+
+  const pw = contrasena
+  const len = pw.length
+  const tieneMayus = /[A-ZÁÉÍÓÚÑ]/.test(pw)
+  const tieneMinus = /[a-záéíóúñ]/.test(pw)
+  const tieneDig = /[0-9]/.test(pw)
+  const tieneEsp = /[\W_]/.test(pw)
+  const variedad = (tieneMayus ? 1 : 0) + (tieneMinus ? 1 : 0) + (tieneDig ? 1 : 0) + (tieneEsp ? 1 : 0)
+
+  if (len < 6 || variedad <= 1) return { nivel: 'muyDebil', descripcion: 'Muy débil' }
+
+  const cumple = requisitosContrasenaIncumplidos(pw).length === 0
+  if (!cumple) return { nivel: 'debil', descripcion: 'Débil' }
+
+  if (len >= 12 && variedad >= 4) return { nivel: 'fuerte', descripcion: 'Fuerte' }
+  return { nivel: 'media', descripcion: 'Media' }
+}

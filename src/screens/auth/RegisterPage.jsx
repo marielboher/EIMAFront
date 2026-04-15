@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './authPages.css'
-import { fetchPasswordStrength, registerUser } from '../../services/auth'
-import { esCorreoValido, requisitosContrasenaIncumplidos } from '../../lib/authValidation'
+import { registerUser } from '../../services/auth'
+import {
+  calcularFortalezaLocal,
+  esCorreoValido,
+  requisitosContrasenaIncumplidos,
+} from '../../lib/authValidation'
 
 function onlyDigitsOrSeparators(value) {
   return value.replace(/[^\d.\- ]/g, '')
@@ -131,7 +135,6 @@ export function RegisterPage() {
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState(null)
   const [apiFieldErrors, setApiFieldErrors] = useState({})
-  const [strength, setStrength] = useState(null)
 
   const localErrors = useMemo(() => validate(values), [values])
   const errors = useMemo(
@@ -140,26 +143,11 @@ export function RegisterPage() {
   )
 
   const canSubmit = !hasValidationErrors(errors) && !submitting
-
-  useEffect(() => {
-    const ac = new AbortController()
-    const t = setTimeout(async () => {
-      if (!values.contrasena) {
-        setStrength(null)
-        return
-      }
-      try {
-        const data = await fetchPasswordStrength(values.contrasena, { signal: ac.signal })
-        setStrength(data)
-      } catch {
-        if (!ac.signal.aborted) setStrength(null)
-      }
-    }, 300)
-    return () => {
-      clearTimeout(t)
-      ac.abort()
-    }
-  }, [values.contrasena])
+  // Fortaleza: cálculo 100% local (sin dependencia de red)
+  const strength = useMemo(
+    () => (values.contrasena ? calcularFortalezaLocal(values.contrasena) : null),
+    [values.contrasena],
+  )
 
   function setField(name, value) {
     setApiFieldErrors((prev) => {
@@ -374,7 +362,7 @@ export function RegisterPage() {
                 className={`strengthRow ${strengthClassFromNivel(nivel)}`}
                 aria-live="polite"
               >
-                Fortaleza: {descFortaleza ?? 'Calculando…'}
+                Fortaleza: {descFortaleza ?? 'Muy débil'}
               </div>
             ) : null}
             {touched.contrasena && errors.contrasena ? (
