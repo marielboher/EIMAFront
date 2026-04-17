@@ -5,13 +5,35 @@ import { esCorreoValido } from '../../lib/authValidation'
 import { loginUser } from '../../services/auth'
 import { clearSession, setAccessToken, setSessionInfo } from '../../lib/authStorage'
 
-function routeForRole(rol) {
-  const r = String(rol ?? '').toLowerCase()
-  if (r === 'alumno') return '/dashboard/alumno'
-  if (r === 'profesor') return '/dashboard/profesor'
-  if (r === 'secretaria') return '/dashboard/secretaria'
-  if (r === 'superadmin') return '/dashboard/admin'
-  return '/dashboard'
+const DASHBOARD_SUPER_ADMIN_PATHS = new Set([
+  '/dashboard',
+  '/dashboard/roles',
+  '/dashboard/alumnos',
+  '/dashboard/profesores',
+  '/dashboard/secretaria',
+  '/dashboard/materias',
+])
+
+/** Rutas que el backend aún puede sugerir pero este SPA ya no expone. */
+const DASHBOARD_LEGACY_PATHS = new Set([
+  '/dashboard/admin',
+  '/dashboard/alumno',
+  '/dashboard/profesor',
+])
+
+function postLoginPath(rolBackend, redireccionSugerida) {
+  const rol = String(rolBackend ?? '').toLowerCase()
+  const sugerida = String(redireccionSugerida ?? '').trim()
+
+  // En este frontend, el dashboard queda restringido a super_admin.
+  if (rol === 'super_admin') {
+    if (DASHBOARD_SUPER_ADMIN_PATHS.has(sugerida)) return sugerida
+    if (DASHBOARD_LEGACY_PATHS.has(sugerida) || sugerida.startsWith('/dashboard/')) return '/dashboard'
+    return '/dashboard'
+  }
+
+  if (sugerida && !sugerida.startsWith('/dashboard')) return sugerida
+  return '/'
 }
 
 export function LoginPage() {
@@ -66,21 +88,23 @@ export function LoginPage() {
     const accessToken = res.data?.accessToken ?? res.data?.AccessToken ?? null
     const almacenamiento = res.data?.almacenamientoToken ?? res.data?.AlmacenamientoToken ?? null
     const personaId = res.data?.personaId ?? res.data?.PersonaId ?? null
-    const redirect =
-      res.data?.redireccionSugerida ??
-      res.data?.RedireccionSugerida ??
-      routeForRole(rolBackend)
+    const redirect = postLoginPath(
+      rolBackend,
+      res.data?.redireccionSugerida ?? res.data?.RedireccionSugerida ?? '',
+    )
 
-    // CA04: guardar token en cliente de forma segura (sessionStorage).
-    // Si el backend usa cookie HttpOnly, el token puede venir null.
+    const expiraEnUtc = res.data?.expiraEnUtc ?? res.data?.ExpiraEnUtc ?? null
+
+    // CA04: persistencia del token (Bearer) alineada a la expiración del backend (24h por defecto).
+    // Si el backend usa cookie HttpOnly, el token puede venir null y el navegador maneja la cookie.
     if (accessToken && (almacenamiento === 'bearer' || !almacenamiento)) {
-      setAccessToken(accessToken)
+      setAccessToken(accessToken, { expiraEnUtc })
     }
     setSessionInfo({
       rol: rolBackend,
       personaId,
       almacenamientoToken: almacenamiento,
-      expiraEnUtc: res.data?.expiraEnUtc ?? res.data?.ExpiraEnUtc ?? null,
+      expiraEnUtc,
     })
 
     navigate(redirect, { replace: true })

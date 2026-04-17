@@ -29,10 +29,9 @@ function avatarStyleForRole(rol) {
   return { background: 'rgba(43, 108, 176, 0.12)', color: '#2B6CB0' } // alumno/default
 }
 
-export function RoleManagementPage() {
+export function RoleManagementPage({ embedded = false } = {}) {
   const session = getSessionInfo()
   const [query, setQuery] = useState('')
-  const [touched, setTouched] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [inlineError, setInlineError] = useState(null)
   const [inlineOk, setInlineOk] = useState(null)
@@ -70,7 +69,6 @@ export function RoleManagementPage() {
   }, [people, query])
 
   async function onChangeRole(nextRole) {
-    setTouched(true)
     setInlineError(null)
     setInlineOk(null)
     const correo = String(nextRole?.correo ?? '').trim()
@@ -116,7 +114,7 @@ export function RoleManagementPage() {
   }
 
   return (
-    <div className="rolesWrap">
+    <div className={`rolesWrap${embedded ? ' embedded' : ''}`}>
       <div className="rolesPanel">
         <div className="panelTitle">Gestión de usuarios y roles</div>
         <div className="panelSub">Solo visible para administradores.</div>
@@ -126,7 +124,6 @@ export function RoleManagementPage() {
           placeholder="Buscar por nombre o correo..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onBlur={() => setTouched(true)}
         />
 
         {loading ? <div className="inlineMsg">Cargando usuarios…</div> : null}

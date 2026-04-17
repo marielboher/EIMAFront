@@ -6,6 +6,16 @@
   padding: 32px 16px;
 }
 
+.rolesWrap.embedded {
+  background: transparent;
+  min-height: auto;
+  padding: 0;
+}
+
+.rolesWrap.embedded .rolesPanel {
+  width: min(980px, 100%);
+}
+
 .rolesPanel {
   background: #ffffff;
   border: 0.5px solid #e0d8d0;

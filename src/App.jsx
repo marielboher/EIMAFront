@@ -1,8 +1,12 @@
 import { Outlet } from 'react-router-dom'
+import { AppNav } from './components/AppNav.jsx'
 
 function App() {
   return (
-    <Outlet />
+    <>
+      <AppNav />
+      <Outlet />
+    </>
   )
 }
 

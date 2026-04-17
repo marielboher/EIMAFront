@@ -1,0 +1,109 @@
+.dashShell {
+  display: flex;
+  min-height: calc(100svh - 56px);
+}
+
+.dashSidebar {
+  width: 260px;
+  flex: 0 0 260px;
+  border-right: 0.5px solid #e0d8d0;
+  background: #ffffff;
+  padding: 18px 14px;
+}
+
+.dashSidebarBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 14px;
+}
+
+.dashDots {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+.dashDots span {
+  border-radius: 2px;
+  opacity: 0.95;
+}
+
+.dashDots .d1 {
+  background: #d7263d;
+}
+.dashDots .d2 {
+  background: #f4a024;
+}
+.dashDots .d3 {
+  background: #1b9e77;
+}
+.dashDots .d4 {
+  background: #2b6cb0;
+}
+
+.dashSidebarTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #2c2c2a;
+}
+
+.dashNav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 6px 10px;
+}
+
+.dashNavLink {
+  text-decoration: none;
+  color: #2c2c2a;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 0.5px solid transparent;
+}
+
+.dashNavLink:hover {
+  background: #fdf6f0;
+  border-color: #e0d8d0;
+}
+
+.dashNavLink.active {
+  background: #fdf6f0;
+  border-color: #e0d8d0;
+}
+
+.dashMain {
+  flex: 1;
+  min-width: 0;
+  background: #fdf6f0;
+  padding: 22px 18px;
+}
+
+@media (max-width: 900px) {
+  .dashShell {
+    flex-direction: column;
+  }
+
+  .dashSidebar {
+    width: 100%;
+    flex: 0 0 auto;
+    border-right: none;
+    border-bottom: 0.5px solid #e0d8d0;
+  }
+
+  .dashNav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .dashNavLink {
+    flex: 1 1 calc(50% - 6px);
+    text-align: center;
+  }
+}
