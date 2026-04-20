@@ -1,0 +1,73 @@
+.contactoWrap {
+  padding: 28px 16px 40px;
+}
+
+.contactoCard {
+  width: min(560px, 100%);
+  max-width: 100%;
+  text-align: left;
+}
+
+.contactoSelect {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 0.5px solid #e0d8d0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #2c2c2a;
+  outline: none;
+  font-family: inherit;
+}
+
+.fieldErr .contactoSelect {
+  border-color: #d7263d;
+}
+
+.fieldOk .contactoSelect {
+  border-color: #1b9e77;
+}
+
+.contactoTextarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 0.5px solid #e0d8d0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  background: #ffffff;
+  color: #2c2c2a;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.fieldErr .contactoTextarea {
+  border-color: #d7263d;
+}
+
+.fieldOk .contactoTextarea {
+  border-color: #1b9e77;
+}
+
+.contactoMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #6b6b68;
+}
+
+.emsgInline {
+  color: #d7263d;
+  text-align: right;
+  flex: 1;
+}

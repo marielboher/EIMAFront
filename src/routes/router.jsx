@@ -3,7 +3,6 @@ import App from '../App.jsx'
 import { HomePage } from '../screens/home/HomePage.jsx'
 import { RegisterPage } from '../screens/auth/RegisterPage.jsx'
 import { LoginPage } from '../screens/auth/LoginPage.jsx'
-import { DashboardPage } from '../screens/dashboard/DashboardPage.jsx'
 import { DashboardLayout } from '../screens/dashboard/DashboardLayout.jsx'
 import { DashboardPlaceholder } from '../screens/dashboard/DashboardPlaceholder.jsx'
 import { DashboardPersonasByRol } from '../screens/dashboard/DashboardPersonasByRol.jsx'
@@ -12,6 +11,7 @@ import { ResetPasswordPage } from '../screens/auth/ResetPasswordPage.jsx'
 import { RoleManagementPage } from '../screens/admin/RoleManagementPage.jsx'
 import { ForbiddenPage } from '../screens/errors/ForbiddenPage.jsx'
 import { ProfilePage } from '../screens/profile/ProfilePage.jsx'
+import { ContactoPage } from '../screens/contacto/ContactoPage.jsx'
 import { RequireAuth } from './RequireAuth.jsx'
 import { RequireRole } from './RequireRole.jsx'
 
@@ -31,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: 'login',
         element: <LoginPage />,
+      },
+      {
+        path: 'contacto',
+        element: <ContactoPage />,
       },
       {
         path: 'perfil',
@@ -70,7 +74,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <DashboardPage title="Inicio" />,
+            element: <Navigate to="/dashboard/roles" replace />,
           },
           {
             path: 'roles',
@@ -99,7 +103,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '*',
-            element: <Navigate to="/dashboard" replace />,
+            element: <Navigate to="/dashboard/roles" replace />,
           },
         ],
       },

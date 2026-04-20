@@ -16,9 +16,6 @@ export function DashboardLayout() {
         </div>
 
         <nav className="dashNav">
-          <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} end to="/dashboard">
-            Inicio
-          </NavLink>
           <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/roles">
             Gestión de roles
           </NavLink>

@@ -42,6 +42,10 @@ export function AppNav() {
             Inicio
           </Link>
 
+          <Link className={location.pathname === '/contacto' ? 'active' : ''} to="/contacto">
+            Contacto
+          </Link>
+
           <Link
             className={`appNavIcon ${accountActive ? 'active' : ''}`}
             to={accountHref}
@@ -58,7 +62,7 @@ export function AppNav() {
 
           {isSuperAdmin ? (
             <>
-              <Link className={location.pathname.startsWith('/dashboard') ? 'active' : ''} to="/dashboard">
+              <Link className={location.pathname.startsWith('/dashboard') ? 'active' : ''} to="/dashboard/roles">
                 Dashboard
               </Link>
             </>

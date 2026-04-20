@@ -1,23 +1,81 @@
 import { useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { getSessionInfo } from '../../lib/authStorage'
+import './profilePage.css'
+
+function etiquetaRol(rol) {
+  const r = String(rol ?? '').toLowerCase()
+  const map = {
+    super_admin: 'Super administrador',
+    alumno: 'Alumno',
+    profesor: 'Profesor',
+    secretaria: 'Secretaría',
+  }
+  return map[r] ?? rol ?? '—'
+}
 
 export function ProfilePage() {
   const location = useLocation()
   const session = useMemo(() => getSessionInfo(), [location.key])
 
   return (
-    <main style={{ padding: 24, textAlign: 'left' }}>
-      <h1 style={{ margin: '0 0 8px' }}>Perfil</h1>
-      <p style={{ margin: 0, color: '#6b6b68' }}>
-        Datos de sesión actuales (placeholder hasta conectar con endpoints de perfil).
-      </p>
-      <pre style={{ marginTop: 16, background: '#fff', border: '1px solid #e0d8d0', borderRadius: 12, padding: 16 }}>
-        {session ? JSON.stringify(session, null, 2) : 'Sin sesión'}
-      </pre>
-      <div style={{ marginTop: 16 }}>
-        <Link to="/">Volver al inicio</Link>
-      </div>
-    </main>
+    <div className="profileShell">
+      <main className="profileMain">
+        <article className="profileCard" aria-labelledby="perfil-titulo">
+          <div className="profileCardInner">
+            <div className="profileBrand">
+              <div className="dots" aria-hidden="true">
+                <span style={{ background: '#D7263D' }} />
+                <span style={{ background: '#F4A024' }} />
+                <span style={{ background: '#1B9E77' }} />
+                <span style={{ background: '#2B6CB0' }} />
+              </div>
+              <span className="profileBrandName">EIMA</span>
+            </div>
+
+            <p className="profileEyebrow">Tu cuenta</p>
+            <h1 id="perfil-titulo" className="profileTitle">
+              Perfil
+            </h1>
+            <p className="profileLead">
+              Resumen de tu sesión. Más adelante podremos mostrar aquí tus datos personales desde el servidor.
+            </p>
+
+            {session ? (
+              <>
+                <h2 className="profileSectionTitle">Sesión actual</h2>
+                <dl className="profileDl">
+                  <div className="profileRow">
+                    <dt className="profileDt">Rol</dt>
+                    <dd className="profileDd">
+                      <span className="profilePill">{etiquetaRol(session.rol)}</span>
+                      {session.rol && etiquetaRol(session.rol) !== session.rol ? (
+                        <span className="profileDdMono" style={{ marginLeft: 8, opacity: 0.75 }}>
+                          ({String(session.rol)})
+                        </span>
+                      ) : null}
+                    </dd>
+                  </div>
+                </dl>
+              </>
+            ) : (
+              <p className="profileEmpty">
+                No hay una sesión activa en este navegador. Iniciá sesión para ver tu perfil.
+              </p>
+            )}
+
+            <footer className="profileFoot">
+              <Link to="/">← Volver al inicio</Link>
+              {!session ? (
+                <>
+                  {' · '}
+                  <Link to="/login">Ir a iniciar sesión</Link>
+                </>
+              ) : null}
+            </footer>
+          </div>
+        </article>
+      </main>
+    </div>
   )
 }
