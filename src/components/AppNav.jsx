@@ -60,12 +60,13 @@ export function AppNav() {
             </svg>
           </Link>
 
-          {isSuperAdmin ? (
-            <>
-              <Link className={location.pathname.startsWith('/dashboard') ? 'active' : ''} to="/dashboard/roles">
-                Dashboard
-              </Link>
-            </>
+          {isAuthed ? (
+            <Link
+              className={location.pathname.startsWith('/dashboard') ? 'active' : ''}
+              to={isSuperAdmin ? '/dashboard/roles' : '/dashboard'}
+            >
+              Dashboard
+            </Link>
           ) : null}
 
           {isAuthed ? (

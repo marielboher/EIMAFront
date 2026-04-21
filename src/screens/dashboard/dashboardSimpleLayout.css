@@ -1,0 +1,111 @@
+.dashSimpleShell {
+  flex: 1;
+  min-height: calc(100svh - 56px);
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(900px 420px at 10% 0%, rgba(43, 108, 176, 0.1), transparent 58%),
+    radial-gradient(800px 380px at 95% 8%, rgba(27, 158, 119, 0.1), transparent 52%),
+    var(--eima-cream);
+}
+
+.dashSimpleHeader {
+  flex: 0 0 auto;
+  padding: 16px 20px;
+  border-bottom: 0.5px solid rgba(224, 216, 208, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.dashSimpleBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dashSimpleDots {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+.dashSimpleDots span {
+  border-radius: 2px;
+  opacity: 0.95;
+}
+
+.dashSimpleDots .d1 {
+  background: #d7263d;
+}
+.dashSimpleDots .d2 {
+  background: #f4a024;
+}
+.dashSimpleDots .d3 {
+  background: #1b9e77;
+}
+.dashSimpleDots .d4 {
+  background: #2b6cb0;
+}
+
+.dashSimpleTitle {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #2c2c2a;
+}
+
+.dashSimpleMain {
+  flex: 1;
+  padding: 28px 20px 40px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashWelcomeCard {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.9);
+  border: 0.5px solid rgba(224, 216, 208, 0.95);
+  border-radius: 16px;
+  padding: 26px 22px 24px;
+  box-shadow: 0 18px 40px rgba(44, 44, 42, 0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashWelcomeCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: linear-gradient(90deg, #d7263d, #f4a024, #1b9e77, #2b6cb0);
+  opacity: 0.95;
+}
+
+.dashWelcomeTitle {
+  margin: 8px 0 12px;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #2c2c2a;
+  line-height: 1.2;
+}
+
+.dashWelcomeText {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(44, 44, 42, 0.88);
+}
+
+.dashWelcomeHint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b6b68;
+}

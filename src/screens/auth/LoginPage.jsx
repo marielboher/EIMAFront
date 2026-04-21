@@ -14,7 +14,7 @@ const DASHBOARD_SUPER_ADMIN_PATHS = new Set([
   '/dashboard/materias',
 ])
 
-/** Rutas que el backend aún puede sugerir pero este SPA ya no expone. */
+/** Rutas que el backend pudo sugerir antes de unificar el SPA en <c>/dashboard</c>. */
 const DASHBOARD_LEGACY_PATHS = new Set([
   '/dashboard/admin',
   '/dashboard/alumno',
@@ -23,17 +23,20 @@ const DASHBOARD_LEGACY_PATHS = new Set([
 
 function postLoginPath(rolBackend, redireccionSugerida) {
   const rol = String(rolBackend ?? '').toLowerCase()
-  const sugerida = String(redireccionSugerida ?? '').trim()
+  let sugerida = String(redireccionSugerida ?? '').trim()
 
-  // En este frontend, el dashboard queda restringido a super_admin.
+  if (DASHBOARD_LEGACY_PATHS.has(sugerida)) sugerida = '/dashboard'
+
   if (rol === 'super_admin') {
+    if (sugerida === '/dashboard' || sugerida === '') return '/dashboard/roles'
     if (DASHBOARD_SUPER_ADMIN_PATHS.has(sugerida)) return sugerida
-    if (DASHBOARD_LEGACY_PATHS.has(sugerida) || sugerida.startsWith('/dashboard/')) return '/dashboard'
-    return '/dashboard'
+    if (sugerida.startsWith('/dashboard/')) return sugerida
+    return '/dashboard/roles'
   }
 
-  if (sugerida && !sugerida.startsWith('/dashboard')) return sugerida
-  return '/'
+  if (sugerida.startsWith('/dashboard')) return '/dashboard'
+  if (sugerida) return sugerida
+  return '/dashboard'
 }
 
 export function LoginPage() {

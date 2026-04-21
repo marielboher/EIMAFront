@@ -3,7 +3,8 @@ import App from '../App.jsx'
 import { HomePage } from '../screens/home/HomePage.jsx'
 import { RegisterPage } from '../screens/auth/RegisterPage.jsx'
 import { LoginPage } from '../screens/auth/LoginPage.jsx'
-import { DashboardLayout } from '../screens/dashboard/DashboardLayout.jsx'
+import { DashboardRoot } from '../screens/dashboard/DashboardRoot.jsx'
+import { DashboardIndex, DashboardCatchAll } from '../screens/dashboard/DashboardIndex.jsx'
 import { DashboardPlaceholder } from '../screens/dashboard/DashboardPlaceholder.jsx'
 import { DashboardPersonasByRol } from '../screens/dashboard/DashboardPersonasByRol.jsx'
 import { RecoverPasswordPage } from '../screens/auth/RecoverPasswordPage.jsx'
@@ -67,47 +68,64 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: (
-          <RequireRole role="super_admin">
-            <DashboardLayout />
-          </RequireRole>
+          <RequireAuth>
+            <DashboardRoot />
+          </RequireAuth>
         ),
         children: [
           {
             index: true,
-            element: <Navigate to="/dashboard/roles" replace />,
+            element: <DashboardIndex />,
           },
           {
             path: 'roles',
-            element: <RoleManagementPage embedded />,
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <RoleManagementPage embedded />
+              </RequireRole>
+            ),
           },
           {
             path: 'alumnos',
-            element: <DashboardPersonasByRol title="Alumnos" rolNombre="alumno" />,
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <DashboardPersonasByRol title="Alumnos" rolNombre="alumno" />
+              </RequireRole>
+            ),
           },
           {
             path: 'profesores',
-            element: <DashboardPersonasByRol title="Profesores" rolNombre="profesor" />,
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <DashboardPersonasByRol title="Profesores" rolNombre="profesor" />
+              </RequireRole>
+            ),
           },
           {
             path: 'secretaria',
-            element: <DashboardPersonasByRol title="Secretaría" rolNombre="secretaria" />,
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <DashboardPersonasByRol title="Secretaría" rolNombre="secretaria" />
+              </RequireRole>
+            ),
           },
           {
             path: 'materias',
             element: (
-              <DashboardPlaceholder
-                title="Materias"
-                description="Próximamente: listado y gestión de materias (ABM / correlativas / asignaciones)."
-              />
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <DashboardPlaceholder
+                  title="Materias"
+                  description="Próximamente: listado y gestión de materias (ABM / correlativas / asignaciones)."
+                />
+              </RequireRole>
             ),
           },
           {
             path: '*',
-            element: <Navigate to="/dashboard/roles" replace />,
+            element: <DashboardCatchAll />,
           },
         ],
       },
     ],
   },
 ])
-
