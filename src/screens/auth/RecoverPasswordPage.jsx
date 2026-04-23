@@ -65,7 +65,6 @@ export function RecoverPasswordPage() {
   return (
     <div className="authWrap">
       <div className="authCard authCardCompact">
-        <div className="pill pillPaso1">Paso 1</div>
         <div className="brand">
           <div className="dots" aria-hidden="true">
             <span style={{ background: '#D7263D' }} />
@@ -82,7 +81,6 @@ export function RecoverPasswordPage() {
         {alert ? <div className="alert">{alert}</div> : null}
         {okData ? (
           <>
-            <div className="pill pillPaso2">Paso 2</div>
             <div className="successBox">Enlace enviado a {correo.trim()}. Revisá tu bandeja.</div>
             <div className="note">
               El enlace expira en {okData.expiraEnMinutos ?? 30} minutos. Si no lo ves, revisá el spam.
@@ -110,7 +108,7 @@ export function RecoverPasswordPage() {
           </button>
 
           <div className="foot">
-            <Link to="/login">Volver a login</Link>
+            <Link to="/login">Volver a iniciar sesión</Link>
             <Link to="/registro">Registrarse</Link>
           </div>
         </form>

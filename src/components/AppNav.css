@@ -2,9 +2,9 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(253, 246, 240, 0.92);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(8px);
-  border-bottom: 0.5px solid #e0d8d0;
+  border-bottom: 0.5px solid var(--border);
   text-align: left;
 }
 
@@ -23,7 +23,7 @@
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: #2c2c2a;
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -35,16 +35,16 @@
   margin-right: 2px;
 }
 .appNavDots .d1 {
-  background: #d7263d;
+  background: var(--eima-gold);
 }
 .appNavDots .d2 {
-  background: #f4a024;
+  background: var(--eima-red);
 }
 .appNavDots .d3 {
-  background: #1b9e77;
+  background: var(--eima-green);
 }
 .appNavDots .d4 {
-  background: #2b6cb0;
+  background: var(--eima-blue);
 }
 
 .appNavTitle {
@@ -55,26 +55,107 @@
 .appNavLinks {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
+.appNavMenu {
+  position: relative;
+  display: none;
+}
+
+.appNavMenuBtn {
+  width: 36px;
+  height: 32px;
+  border-radius: 999px;
+  border: 0.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.appNavMenuBtn:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.appNavAccount {
+  position: relative;
+  display: inline-flex;
+}
+
+.appNavDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 180px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: var(--shadow);
+  z-index: 60;
+}
+
+.appNavDropdownRight {
+  left: auto;
+  right: 0;
+}
+
+.appNavDropdown a,
+.appNavDropdownBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 0.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.appNavDropdown a:hover,
+.appNavDropdownBtn:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.appNavDropdown a.active {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
 .appNavLinks a {
   font-size: 13px;
-  color: #2b6cb0;
+  color: var(--text);
   text-decoration: none;
   padding: 6px 10px;
   border-radius: 999px;
+  border: 0.5px solid transparent;
+  line-height: 1;
 }
 
 .appNavLinks a:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
 }
 
 .appNavLinks a.active {
-  background: rgba(43, 108, 176, 0.12);
+  background: var(--accent-soft);
   text-decoration: none;
+  border-color: var(--accent-border);
 }
 
 .appNavIcon {
@@ -84,26 +165,51 @@
   width: 36px;
   height: 32px;
   border-radius: 999px;
-  color: #2b6cb0;
+  color: var(--text);
   text-decoration: none;
   border: 0.5px solid transparent;
 }
 
 .appNavIcon:hover {
   text-decoration: none;
-  border-color: rgba(43, 108, 176, 0.35);
-  background: rgba(43, 108, 176, 0.08);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
 }
 
 .appNavIcon.active {
-  background: rgba(43, 108, 176, 0.12);
-  border-color: rgba(43, 108, 176, 0.25);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.appNavTheme {
+  border: 0.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 999px;
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.appNavTheme:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.appNavThemeIcon {
+  font-size: 14px;
 }
 
 .appNavLogout {
-  border: 0.5px solid #e0d8d0;
-  background: #ffffff;
-  color: #2c2c2a;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 13px;
@@ -111,6 +217,25 @@
 }
 
 .appNavLogout:hover {
-  border-color: rgba(215, 38, 61, 0.45);
-  color: #d7263d;
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .appNavInner {
+    padding: 10px 12px;
+  }
+  .appNavTitle {
+    font-size: 15px;
+  }
+  .appNavLinks {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .appNavMenu {
+    display: inline-flex;
+  }
+  .appNavTopLink {
+    display: none;
+  }
 }

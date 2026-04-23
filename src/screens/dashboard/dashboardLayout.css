@@ -6,8 +6,8 @@
 .dashSidebar {
   width: 260px;
   flex: 0 0 260px;
-  border-right: 0.5px solid #e0d8d0;
-  background: #ffffff;
+  border-right: 0.5px solid var(--border);
+  background: var(--surface);
   padding: 18px 14px;
 }
 
@@ -32,23 +32,23 @@
 }
 
 .dashDots .d1 {
-  background: #d7263d;
+  background: var(--eima-gold);
 }
 .dashDots .d2 {
-  background: #f4a024;
+  background: var(--eima-red);
 }
 .dashDots .d3 {
-  background: #1b9e77;
+  background: var(--eima-green);
 }
 .dashDots .d4 {
-  background: #2b6cb0;
+  background: var(--eima-blue);
 }
 
 .dashSidebarTitle {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: #2c2c2a;
+  color: var(--text);
 }
 
 .dashNav {
@@ -60,7 +60,7 @@
 
 .dashNavLink {
   text-decoration: none;
-  color: #2c2c2a;
+  color: var(--text);
   font-size: 13px;
   font-weight: 600;
   padding: 10px 10px;
@@ -69,19 +69,19 @@
 }
 
 .dashNavLink:hover {
-  background: #fdf6f0;
-  border-color: #e0d8d0;
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
 }
 
 .dashNavLink.active {
-  background: #fdf6f0;
-  border-color: #e0d8d0;
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
 }
 
 .dashMain {
   flex: 1;
   min-width: 0;
-  background: #fdf6f0;
+  background: var(--bg);
   padding: 22px 18px;
 }
 
@@ -94,7 +94,7 @@
     width: 100%;
     flex: 0 0 auto;
     border-right: none;
-    border-bottom: 0.5px solid #e0d8d0;
+    border-bottom: 0.5px solid var(--border);
   }
 
   .dashNav {

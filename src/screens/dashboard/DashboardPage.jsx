@@ -51,15 +51,18 @@ export function DashboardPage({ title }) {
 
       <div className="dashCardText" style={{ marginBottom: 10 }}>
         <div>
-          <span style={{ fontWeight: 700, color: '#2c2c2a' }}>Rol:</span>{' '}
+          <span style={{ fontWeight: 700, color: 'var(--text)' }}>Rol:</span>{' '}
           <span>{rol || '—'}</span>
         </div>
         <div style={{ marginTop: 6 }}>
-          <span style={{ fontWeight: 700, color: '#2c2c2a' }}>Correo (cuenta usuario):</span>{' '}
+          <span style={{ fontWeight: 700, color: 'var(--text)' }}>Correo (cuenta usuario):</span>{' '}
           <span>{correoMostrado}</span>
         </div>
         {correoError ? (
-          <div className="dashCardText" style={{ marginTop: 8, marginBottom: 0, color: '#b42318', fontWeight: 600 }}>
+          <div
+            className="dashCardText"
+            style={{ marginTop: 8, marginBottom: 0, color: 'color-mix(in srgb, var(--eima-red) 80%, #000)', fontWeight: 600 }}
+          >
             {correoError}
           </div>
         ) : null}

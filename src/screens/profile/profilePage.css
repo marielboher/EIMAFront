@@ -1,10 +1,10 @@
 .profileShell {
   flex: 1;
   background:
-    radial-gradient(900px 420px at 10% 0%, rgba(43, 108, 176, 0.1), transparent 58%),
-    radial-gradient(800px 380px at 95% 8%, rgba(27, 158, 119, 0.1), transparent 52%),
-    radial-gradient(700px 480px at 50% 100%, rgba(244, 160, 36, 0.08), transparent 50%),
-    var(--eima-cream);
+    radial-gradient(900px 420px at 10% 0%, color-mix(in srgb, var(--eima-blue) 12%, transparent), transparent 58%),
+    radial-gradient(800px 380px at 95% 8%, color-mix(in srgb, var(--eima-green) 12%, transparent), transparent 52%),
+    radial-gradient(700px 480px at 50% 100%, color-mix(in srgb, var(--eima-gold) 10%, transparent), transparent 50%),
+    var(--bg);
 }
 
 .profileMain {
@@ -16,10 +16,10 @@
 
 .profileCard {
   position: relative;
-  background: rgba(255, 255, 255, 0.88);
-  border: 0.5px solid rgba(224, 216, 208, 0.95);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 0.5px solid var(--border);
   border-radius: 16px;
-  box-shadow: 0 18px 40px rgba(44, 44, 42, 0.07);
+  box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
   overflow: hidden;
 }
@@ -29,7 +29,7 @@
   position: absolute;
   inset: 0 0 auto 0;
   height: 5px;
-  background: linear-gradient(90deg, #d7263d, #f4a024, #1b9e77, #2b6cb0);
+  background: linear-gradient(90deg, var(--eima-red), var(--eima-gold), var(--eima-green), var(--eima-blue));
   opacity: 0.95;
 }
 
@@ -43,7 +43,7 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6b6b68;
+  color: var(--muted-2);
   font-weight: 650;
 }
 
@@ -53,14 +53,14 @@
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.4px;
-  color: #2c2c2a;
+  color: var(--text);
 }
 
 .profileLead {
   margin: 0 0 22px;
   font-size: 14px;
   line-height: 1.55;
-  color: rgba(44, 44, 42, 0.82);
+  color: var(--muted);
 }
 
 .profileBrand {
@@ -81,14 +81,14 @@
 .profileBrandName {
   font-size: 18px;
   font-weight: 600;
-  color: #2c2c2a;
+  color: var(--text);
 }
 
 .profileSectionTitle {
   margin: 0 0 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #2c2c2a;
+  color: var(--text);
 }
 
 .profileDl {
@@ -102,7 +102,7 @@
   grid-template-columns: minmax(0, 38%) 1fr;
   gap: 10px 16px;
   padding: 12px 0;
-  border-bottom: 0.5px solid rgba(224, 216, 208, 0.85);
+  border-bottom: 0.5px solid var(--border-2);
   align-items: baseline;
 }
 
@@ -115,20 +115,20 @@
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #6b6b68;
+  color: var(--muted-2);
 }
 
 .profileDd {
   margin: 0;
   font-size: 14px;
-  color: #2c2c2a;
+  color: var(--text);
   word-break: break-word;
 }
 
 .profileDdMono {
   font-family: var(--mono);
   font-size: 13px;
-  color: rgba(44, 44, 42, 0.88);
+  color: color-mix(in srgb, var(--text) 88%, transparent);
 }
 
 .profilePill {
@@ -139,8 +139,8 @@
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  background: var(--accent-bg);
-  color: var(--eima-blue);
+  background: var(--accent-soft);
+  color: var(--text);
   border: 0.5px solid var(--accent-border);
 }
 
@@ -148,23 +148,23 @@
   margin: 0;
   padding: 14px 14px;
   border-radius: 10px;
-  background: rgba(44, 44, 42, 0.04);
-  border: 0.5px solid rgba(224, 216, 208, 0.9);
+  background: var(--code-bg);
+  border: 0.5px solid var(--border);
   font-size: 14px;
   line-height: 1.5;
-  color: rgba(44, 44, 42, 0.85);
+  color: var(--muted);
 }
 
 .profileFoot {
   margin-top: 22px;
   padding-top: 18px;
-  border-top: 0.5px solid rgba(224, 216, 208, 0.85);
+  border-top: 0.5px solid var(--border-2);
   font-size: 13px;
-  color: #6b6b68;
+  color: var(--muted-2);
 }
 
 .profileFoot a {
-  color: var(--eima-blue);
+  color: var(--text);
   font-weight: 500;
   text-decoration: none;
 }

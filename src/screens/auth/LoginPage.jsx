@@ -4,6 +4,8 @@ import './authPages.css'
 import { esCorreoValido } from '../../lib/authValidation'
 import { loginUser } from '../../services/auth'
 import { clearSession, setAccessToken, setSessionInfo } from '../../lib/authStorage'
+import { toastError, toastInfo } from '../../lib/alerts'
+import { fetchMiPerfil } from '../../services/personas'
 
 const DASHBOARD_SUPER_ADMIN_PATHS = new Set([
   '/dashboard',
@@ -28,10 +30,10 @@ function postLoginPath(rolBackend, redireccionSugerida) {
   if (DASHBOARD_LEGACY_PATHS.has(sugerida)) sugerida = '/dashboard'
 
   if (rol === 'super_admin') {
-    if (sugerida === '/dashboard' || sugerida === '') return '/dashboard/roles'
+    if (sugerida === '/dashboard' || sugerida === '') return '/dashboard'
     if (DASHBOARD_SUPER_ADMIN_PATHS.has(sugerida)) return sugerida
     if (sugerida.startsWith('/dashboard/')) return sugerida
-    return '/dashboard/roles'
+    return '/dashboard'
   }
 
   if (sugerida.startsWith('/dashboard')) return '/dashboard'
@@ -82,7 +84,7 @@ export function LoginPage() {
 
     if (!res.ok) {
       // CA02: mensaje genérico (sin indicar cuál campo falló)
-      setAlert('Credenciales incorrectas. Verificá tu correo y contraseña.')
+      toastError({ title: 'Credenciales incorrectas. Verificá tu correo y contraseña.' })
       return
     }
 
@@ -103,11 +105,29 @@ export function LoginPage() {
     if (accessToken && (almacenamiento === 'bearer' || !almacenamiento)) {
       setAccessToken(accessToken, { expiraEnUtc })
     }
+    let perfilNombre = ''
+    let perfilApellido = ''
+
+    // Bienvenida (best-effort): si tenemos token y endpoint disponible, traemos el nombre.
+    try {
+      const perfil = await fetchMiPerfil()
+      perfilNombre = String(perfil?.nombre ?? perfil?.Nombre ?? '').trim()
+      perfilApellido = String(perfil?.apellido ?? perfil?.Apellido ?? '').trim()
+      const full = [perfilNombre, perfilApellido].filter(Boolean).join(' ')
+      if (full) {
+        toastInfo({ title: `¡Bienvenido/a, ${full}!` })
+      }
+    } catch {
+      // ignore
+    }
+
     setSessionInfo({
       rol: rolBackend,
       personaId,
       almacenamientoToken: almacenamiento,
       expiraEnUtc,
+      nombre: perfilNombre || undefined,
+      apellido: perfilApellido || undefined,
     })
 
     navigate(redirect, { replace: true })

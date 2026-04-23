@@ -89,7 +89,6 @@ export function ResetPasswordPage() {
   return (
     <div className="authWrap">
       <div className="authCard authCardCompact">
-        <div className="pill pillPaso3">Paso 3</div>
         <div className="brand">
           <div className="dots" aria-hidden="true">
             <span style={{ background: '#D7263D' }} />
@@ -142,7 +141,7 @@ export function ResetPasswordPage() {
           </button>
 
           <div className="foot">
-            <Link to="/login">Volver a login</Link>
+            <Link to="/login">Volver a iniciar sesión</Link>
             <Link to="/recuperar-contrasena">Solicitar nuevo enlace</Link>
           </div>
         </form>

@@ -12,7 +12,6 @@ import { ResetPasswordPage } from '../screens/auth/ResetPasswordPage.jsx'
 import { RoleManagementPage } from '../screens/admin/RoleManagementPage.jsx'
 import { ForbiddenPage } from '../screens/errors/ForbiddenPage.jsx'
 import { ProfilePage } from '../screens/profile/ProfilePage.jsx'
-import { ContactoPage } from '../screens/contacto/ContactoPage.jsx'
 import { RequireAuth } from './RequireAuth.jsx'
 import { RequireRole } from './RequireRole.jsx'
 
@@ -32,10 +31,6 @@ export const router = createBrowserRouter([
       {
         path: 'login',
         element: <LoginPage />,
-      },
-      {
-        path: 'contacto',
-        element: <ContactoPage />,
       },
       {
         path: 'perfil',
