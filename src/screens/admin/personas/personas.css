@@ -1,0 +1,227 @@
+.personasWrap {
+  background: var(--bg);
+  min-height: 100svh;
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px;
+  box-sizing: border-box;
+}
+
+.personasPanel {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-2);
+}
+
+.panelTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.panelSub {
+  font-size: 13px;
+  color: var(--muted-2);
+  margin-top: 4px;
+}
+
+/* Campos e Inputs */
+.input-field, .select-field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--sans);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus, .select-field:focus {
+  border-color: var(--eima-gold);
+}
+
+/* Filtros */
+.filtersRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.filtersRow .search {
+  flex: 2;
+}
+
+.filtersRow .select-field {
+  flex: 1;
+}
+
+/* Tabla */
+.tableContainer {
+  overflow-x: auto;
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+}
+
+.personasTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.personasTable th, .personasTable td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-2);
+}
+
+.personasTable th {
+  background: var(--surface-2);
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.personasTable tr:last-child td {
+  border-bottom: none;
+}
+
+.row-inactive td {
+  opacity: 0.6;
+  background: var(--bg);
+}
+
+.fw-600 { font-weight: 600; }
+.capitalize { text-transform: capitalize; }
+.emptyState { text-align: center; color: var(--muted); padding: 24px !important; }
+.actions-col { width: 100px; text-align: right; }
+
+/* Badges */
+.badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.badge.activo { background: rgba(74, 155, 111, 0.15); color: var(--eima-green); }
+.badge.inactivo { background: rgba(212, 88, 74, 0.15); color: var(--eima-red); }
+
+/* Paginación */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.pagination-controls { display: flex; gap: 8px; }
+
+/* Formularios */
+.personaForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--eima-blue);
+  border-bottom: 1px solid var(--border-2);
+  padding-bottom: 8px;
+  margin: 16px 0 0 0;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.full-width { grid-column: 1 / -1; }
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-2);
+}
+
+/* Botones */
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: var(--sans);
+  transition: all 0.2s;
+}
+
+.btn.primary {
+  background: var(--eima-gold);
+  color: var(--accent-ink);
+}
+
+.btn.primary:hover {
+  filter: brightness(0.95);
+}
+
+.btn.outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn.outline:hover {
+  background: var(--surface-2);
+}
+
+.btn.small {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  opacity: 0.7;
+}
+
+.btn-icon:hover { opacity: 1; }
+.btn-icon.danger { color: var(--eima-red); }
+.btn-icon.success { color: var(--eima-green); }

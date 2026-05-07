@@ -10,6 +10,7 @@ import { DashboardPersonasByRol } from '../screens/dashboard/DashboardPersonasBy
 import { RecoverPasswordPage } from '../screens/auth/RecoverPasswordPage.jsx'
 import { ResetPasswordPage } from '../screens/auth/ResetPasswordPage.jsx'
 import { RoleManagementPage } from '../screens/admin/RoleManagementPage.jsx'
+import { PersonasDashboard } from '../screens/admin/personas/PersonasDashboard.jsx'
 import { ForbiddenPage } from '../screens/errors/ForbiddenPage.jsx'
 import { ProfilePage } from '../screens/profile/ProfilePage.jsx'
 import { RequireAuth } from './RequireAuth.jsx'
@@ -77,6 +78,14 @@ export const router = createBrowserRouter([
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
                 <RoleManagementPage embedded />
+              </RequireRole>
+            ),
+          },
+          {
+            path: 'personas',
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <PersonasDashboard />
               </RequireRole>
             ),
           },

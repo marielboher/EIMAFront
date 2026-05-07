@@ -24,6 +24,9 @@ export function DashboardIndex() {
             <Link className="dashWelcomeAction" to="/dashboard/roles" role="listitem">
               Roles
             </Link>
+            <Link className="dashWelcomeAction" to="/dashboard/personas" role="listitem">
+              Directorio (ABM)
+            </Link>
             <Link className="dashWelcomeAction" to="/dashboard/alumnos" role="listitem">
               Alumnos
             </Link>
