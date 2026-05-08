@@ -1,27 +1,45 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PersonaForm } from './PersonaForm';
+import { getPersonas, togglePersonaEstado } from '../../../services/personas';
 import './personas.css';
 
-// Datos de prueba mockeados
-const mockPersonas = [
-  { id: 1, nombre: 'Juan', apellido: 'Pérez', dni: '12345678', rol: 'alumno', estado: 'activo' },
-  { id: 2, nombre: 'María', apellido: 'Gómez', dni: '87654321', rol: 'docente', estado: 'activo' },
-  { id: 3, nombre: 'Carlos', apellido: 'López', dni: '11223344', rol: 'colaborador', estado: 'inactivo' }
-];
-
 export function PersonasDashboard() {
-  const [personas, setPersonas] = useState(mockPersonas);
+  const [personas, setPersonas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('todos');
   const [filterState, setFilterState] = useState('activo');
   const [showForm, setShowForm] = useState(false);
   const [editingPersona, setEditingPersona] = useState(null);
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const data = await getPersonas();
+      setPersonas(data);
+    } catch (error) {
+      console.error("Error al cargar personas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtrado de la lista
   const filteredPersonas = personas.filter(p => {
-    const matchesSearch = `${p.nombre} ${p.apellido} ${p.dni}`.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = filterRole === 'todos' || p.rol === filterRole;
-    const matchesState = filterState === 'todos' || p.estado === filterState;
+    const nombreCompleto = `${p.nombre || p.Nombre || ''} ${p.apellido || p.Apellido || ''}`.toLowerCase();
+    const dni = (p.dni || p.Dni || '').toString();
+    const matchesSearch = nombreCompleto.includes(search.toLowerCase()) || dni.includes(search);
+    
+    const rolPersona = (p.rol?.nombre || p.rol?.Nombre || '').toLowerCase();
+    const matchesRole = filterRole === 'todos' || rolPersona === filterRole;
+    
+    const estadoActual = p.activo ? 'activo' : 'inactivo';
+    const matchesState = filterState === 'todos' || estadoActual === filterState;
+    
     return matchesSearch && matchesRole && matchesState;
   });
 
@@ -30,11 +48,15 @@ export function PersonasDashboard() {
     setShowForm(true);
   };
 
-  const handleToggleState = (personaId, currentState) => {
-    // Simulación de Baja Lógica (o reactivación)
-    setPersonas(prev => prev.map(p => 
-      p.id === personaId ? { ...p, estado: currentState === 'activo' ? 'inactivo' : 'activo' } : p
-    ));
+  const handleToggleState = async (personaId) => {
+    try {
+      const result = await togglePersonaEstado(personaId);
+      setPersonas(prev => prev.map(p => 
+        p.id === personaId ? { ...p, activo: result.activo } : p
+      ));
+    } catch (error) {
+      alert("No se pudo cambiar el estado de la persona.");
+    }
   };
 
   if (showForm) {
@@ -81,49 +103,59 @@ export function PersonasDashboard() {
         </div>
 
         <div className="tableContainer">
-          <table className="personasTable">
-            <thead>
-              <tr>
-                <th>Nombre Completo</th>
-                <th>DNI</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th className="actions-col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPersonas.length === 0 ? (
+          {loading ? (
+            <div className="emptyState">Cargando personas...</div>
+          ) : (
+            <table className="personasTable">
+              <thead>
                 <tr>
-                  <td colSpan="5" className="emptyState">No se encontraron resultados.</td>
+                  <th>Nombre Completo</th>
+                  <th>DNI</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th className="actions-col">Acciones</th>
                 </tr>
-              ) : (
-                filteredPersonas.map(p => (
-                  <tr key={p.id} className={p.estado === 'inactivo' ? 'row-inactive' : ''}>
-                    <td className="fw-600">{p.nombre} {p.apellido}</td>
-                    <td>{p.dni}</td>
-                    <td className="capitalize">{p.rol}</td>
-                    <td>
-                      <span className={`badge ${p.estado}`}>
-                        {p.estado}
-                      </span>
-                    </td>
-                    <td className="actions-col">
-                      <button className="btn-icon" onClick={() => handleEdit(p)} title="Editar Ficha">
-                        ✎
-                      </button>
-                      <button 
-                        className={`btn-icon ${p.estado === 'activo' ? 'danger' : 'success'}`} 
-                        onClick={() => handleToggleState(p.id, p.estado)}
-                        title={p.estado === 'activo' ? 'Dar de baja' : 'Reactivar'}
-                      >
-                        {p.estado === 'activo' ? '🚫' : '✅'}
-                      </button>
-                    </td>
+              </thead>
+              <tbody>
+                {filteredPersonas.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="emptyState">No se encontraron resultados.</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredPersonas.map(p => {
+                    const nombre = `${p.nombre || p.Nombre || ''} ${p.apellido || p.Apellido || ''}`;
+                    const rol = p.rol?.nombre || p.rol?.Nombre || '—';
+                    const estado = p.activo ? 'activo' : 'inactivo';
+                    
+                    return (
+                      <tr key={p.id} className={!p.activo ? 'row-inactive' : ''}>
+                        <td className="fw-600">{nombre}</td>
+                        <td>{p.dni || p.Dni}</td>
+                        <td className="capitalize">{rol}</td>
+                        <td>
+                          <span className={`badge ${estado}`}>
+                            {estado}
+                          </span>
+                        </td>
+                        <td className="actions-col">
+                          <button className="btn-icon" onClick={() => handleEdit(p)} title="Editar Ficha">
+                            ✎
+                          </button>
+                          <button 
+                            className={`btn-icon ${p.activo ? 'danger' : 'success'}`} 
+                            onClick={() => handleToggleState(p.id)}
+                            title={p.activo ? 'Dar de baja' : 'Reactivar'}
+                          >
+                            {p.activo ? '🚫' : '✅'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
         
         {/* Paginación simple mockeada */}

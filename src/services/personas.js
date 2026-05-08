@@ -17,4 +17,7 @@ export async function fetchMiPerfil({ signal } = {}) {
   const res = await http.get('/api/Personas/mi-perfil', { signal })
   return res.data
 }
-
+export async function togglePersonaEstado(id, { signal } = {}) {
+  const res = await http.patch(`/api/Personas/${id}/cambiar-estado`, null, { signal })
+  return res.data
+}
