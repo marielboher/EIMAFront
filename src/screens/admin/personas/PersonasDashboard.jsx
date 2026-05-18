@@ -12,36 +12,54 @@ export function PersonasDashboard() {
   const [showForm, setShowForm] = useState(false);
   const [editingPersona, setEditingPersona] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Estados de paginación del servidor (HU15)
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [paginasTotales, setPaginasTotales] = useState(1);
+  const [totalRegistros, setTotalRegistros] = useState(0);
 
-  const fetchData = async () => {
+  // Carga de datos unificada con filtros de servidor
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchData({ pagina: 1, buscar: search, rol: filterRole, estado: filterState });
+    }, 350);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, filterRole, filterState]);
+
+  const fetchData = async (options = {}) => {
     setLoading(true);
     try {
-      const data = await getPersonas();
-      setPersonas(data);
+      const rol = options.rol !== undefined ? options.rol : filterRole;
+      const estado = options.estado !== undefined ? options.estado : filterState;
+      const buscar = options.buscar !== undefined ? options.buscar : search;
+      const pagina = options.pagina !== undefined ? options.pagina : paginaActual;
+      const limite = 20;
+
+      const res = await getPersonas({ rol, estado, buscar, pagina, limite });
+      
+      setPersonas(res.datos || []);
+      setPaginaActual(res.paginaActual || 1);
+      setPaginasTotales(res.paginasTotales || 1);
+      setTotalRegistros(res.totalRegistros || 0);
     } catch (error) {
       console.error("Error al cargar personas:", error);
+      setPersonas([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtrado de la lista
-  const filteredPersonas = personas.filter(p => {
-    const nombreCompleto = `${p.nombre || p.Nombre || ''} ${p.apellido || p.Apellido || ''}`.toLowerCase();
-    const dni = (p.dni || p.Dni || '').toString();
-    const matchesSearch = nombreCompleto.includes(search.toLowerCase()) || dni.includes(search);
-    
-    const rolPersona = (p.rol?.nombre || p.rol?.Nombre || '').toLowerCase();
-    const matchesRole = filterRole === 'todos' || rolPersona === filterRole;
-    
-    const estadoActual = p.activo ? 'activo' : 'inactivo';
-    const matchesState = filterState === 'todos' || estadoActual === filterState;
-    
-    return matchesSearch && matchesRole && matchesState;
-  });
+  const handlePrevPage = () => {
+    if (paginaActual > 1) {
+      fetchData({ pagina: paginaActual - 1 });
+    }
+  };
+
+  const handleNextPage = () => {
+    if (paginaActual < paginasTotales) {
+      fetchData({ pagina: paginaActual + 1 });
+    }
+  };
 
   const handleEdit = (persona) => {
     setEditingPersona(persona);
@@ -52,7 +70,7 @@ export function PersonasDashboard() {
     try {
       const result = await togglePersonaEstado(personaId);
       setPersonas(prev => prev.map(p => 
-        p.id === personaId ? { ...p, activo: result.activo } : p
+        (p.id === personaId || p.Id === personaId) ? { ...p, activo: result.activo } : p
       ));
     } catch (error) {
       alert("No se pudo cambiar el estado de la persona.");
@@ -63,9 +81,12 @@ export function PersonasDashboard() {
     return (
       <PersonaForm 
         persona={editingPersona} 
-        onClose={() => {
+        onClose={(huboCambios) => {
           setShowForm(false);
           setEditingPersona(null);
+          if (huboCambios === true) {
+            fetchData({ pagina: paginaActual });
+          }
         }} 
       />
     );
@@ -117,18 +138,18 @@ export function PersonasDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPersonas.length === 0 ? (
+                {personas.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="emptyState">No se encontraron resultados.</td>
                   </tr>
                 ) : (
-                  filteredPersonas.map(p => {
+                  personas.map(p => {
                     const nombre = `${p.nombre || p.Nombre || ''} ${p.apellido || p.Apellido || ''}`;
                     const rol = p.rol?.nombre || p.rol?.Nombre || '—';
                     const estado = p.activo ? 'activo' : 'inactivo';
                     
                     return (
-                      <tr key={p.id} className={!p.activo ? 'row-inactive' : ''}>
+                      <tr key={p.id || p.Id} className={!p.activo ? 'row-inactive' : ''}>
                         <td className="fw-600">{nombre}</td>
                         <td>{p.dni || p.Dni}</td>
                         <td className="capitalize">{rol}</td>
@@ -143,7 +164,7 @@ export function PersonasDashboard() {
                           </button>
                           <button 
                             className={`btn-icon ${p.activo ? 'danger' : 'success'}`} 
-                            onClick={() => handleToggleState(p.id)}
+                            onClick={() => handleToggleState(p.id || p.Id)}
                             title={p.activo ? 'Dar de baja' : 'Reactivar'}
                           >
                             {p.activo ? '🚫' : '✅'}
@@ -158,12 +179,24 @@ export function PersonasDashboard() {
           )}
         </div>
         
-        {/* Paginación simple mockeada */}
+        {/* Paginación en servidor (HU15) */}
         <div className="pagination">
-          <span>Mostrando {filteredPersonas.length} registros</span>
+          <span>Mostrando {personas.length} de {totalRegistros} registros (Pág. {paginaActual} de {paginasTotales})</span>
           <div className="pagination-controls">
-            <button className="btn outline small" disabled>Anterior</button>
-            <button className="btn outline small" disabled>Siguiente</button>
+            <button 
+              className="btn outline small" 
+              disabled={paginaActual <= 1} 
+              onClick={handlePrevPage}
+            >
+              Anterior
+            </button>
+            <button 
+              className="btn outline small" 
+              disabled={paginaActual >= paginasTotales} 
+              onClick={handleNextPage}
+            >
+              Siguiente
+            </button>
           </div>
         </div>
       </div>

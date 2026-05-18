@@ -225,3 +225,24 @@
 .btn-icon:hover { opacity: 1; }
 .btn-icon.danger { color: var(--eima-red); }
 .btn-icon.success { color: var(--eima-green); }
+
+/* Validación en Tiempo Real (HU09, HU11) */
+.input-field.field-ok, .select-field.field-ok {
+  border-color: #1b9e77 !important;
+  box-shadow: 0 0 0 1px rgba(27, 158, 119, 0.15);
+}
+.input-field.field-err, .select-field.field-err {
+  border-color: #d7263d !important;
+  box-shadow: 0 0 0 1px rgba(215, 38, 61, 0.15);
+}
+.emsg {
+  font-size: 11px;
+  color: #d7263d;
+  margin-top: 3px;
+  text-align: left;
+  font-weight: 500;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
