@@ -9,8 +9,8 @@ export function PersonaForm({ persona, onClose }) {
   const getUIFriendlyRole = (dbRol) => {
     if (!dbRol) return '';
     const name = (typeof dbRol === 'string' ? dbRol : dbRol.nombre || dbRol.Nombre || '').toLowerCase();
-    if (name === 'profesor') return 'docente';
-    if (name === 'secretaria') return 'colaborador';
+    if (name === 'profesor') return 'profesor';
+    if (name === 'secretaria') return 'administrativo';
     return name;
   };
 
@@ -29,16 +29,22 @@ export function PersonaForm({ persona, onClose }) {
     dni: persona?.dni || persona?.Dni || '',
     telefono: persona?.telefono || persona?.Telefono || '',
     direccion: persona?.direccion || persona?.Direccion || '',
+    email: persona?.cuentaUsuario?.correoElectronico || persona?.CuentaUsuario?.CorreoElectronico || '',
     rol: getUIFriendlyRole(persona?.rol || persona?.Rol),
     // Campos Alumno
     colegio: persona?.colegio || persona?.Colegio || '',
     gradoCurso: persona?.gradoCurso || persona?.GradoCurso || '',
     nivelEducativo: persona?.nivelEducativo || persona?.NivelEducativo || '',
-    // Campos Docente
+    // Campos Profesor
     especialidades: persona?.especialidades || persona?.Especialidades || '',
     titulo: persona?.titulo || persona?.Titulo || '',
     fechaIngreso: formatDate(persona?.fechaIngresoDocente || persona?.FechaIngresoDocente),
-    // Campos Colaborador
+    cantidadHoras: persona?.cantidadHoras || persona?.CantidadHoras || '',
+    valorClasePorHora: persona?.valorClasePorHora || persona?.ValorClasePorHora || '',
+    valorCursoCompleto: persona?.valorCursoCompleto || persona?.ValorCursoCompleto || '',
+    minimoAlumnosGrupo: persona?.minimoAlumnosGrupo || persona?.MinimoAlumnosGrupo || '',
+    porcentajeDescuentoGrupo: persona?.porcentajeDescuentoGrupo || persona?.PorcentajeDescuentoGrupo || '',
+    // Campos Administrativo
     tipoColaborador: persona?.tipoColaborador?.tipo || persona?.TipoColaborador?.Tipo || '',
     fechaContratacion: formatDate(persona?.fechaContratacion || persona?.FechaContratacion),
     salario: persona?.salario || persona?.Salario || ''
@@ -74,13 +80,40 @@ export function PersonaForm({ persona, onClose }) {
       if (!valString) return 'La dirección es obligatoria.';
       return '';
     }
+    if (name === 'email') {
+      if (!valString) return 'El correo electrónico es obligatorio.';
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(valString)) return 'Formato de correo electrónico inválido.';
+      return '';
+    }
     if (name === 'rol') {
       if (!value) return 'Debe seleccionar un rol.';
       return '';
     }
-    if (currentRol === 'colaborador') {
+    if (currentRol === 'profesor') {
+      if (name === 'cantidadHoras' && value !== '' && value !== null && value !== undefined) {
+        const val = parseFloat(value);
+        if (isNaN(val) || val <= 0) return 'Las horas deben ser un número positivo.';
+      }
+      if (name === 'valorClasePorHora' && value !== '' && value !== null && value !== undefined) {
+        const val = parseFloat(value);
+        if (isNaN(val) || val < 0) return 'El valor debe ser un número positivo.';
+      }
+      if (name === 'valorCursoCompleto' && value !== '' && value !== null && value !== undefined) {
+        const val = parseFloat(value);
+        if (isNaN(val) || val < 0) return 'El valor debe ser un número positivo.';
+      }
+      if (name === 'minimoAlumnosGrupo' && value !== '' && value !== null && value !== undefined) {
+        const val = parseInt(value, 10);
+        if (isNaN(val) || val <= 0) return 'Debe ser mayor que 0.';
+      }
+      if (name === 'porcentajeDescuentoGrupo' && value !== '' && value !== null && value !== undefined) {
+        const pct = parseFloat(value);
+        if (isNaN(pct) || pct < 0 || pct > 100) return 'El descuento debe estar entre 0% y 100%.';
+      }
+    }
+    if (currentRol === 'administrativo') {
       if (name === 'tipoColaborador') {
-        if (!valString) return 'El tipo de colaborador es obligatorio.';
+        if (!valString) return 'El tipo de administrativo es obligatorio.';
       }
       if (name === 'fechaContratacion' && value) {
         if (value < '2025-01-01') {
@@ -113,8 +146,8 @@ export function PersonaForm({ persona, onClose }) {
     if (!touched[name] && !val) return 'input-field';
     if (err) return 'input-field field-err';
 
-    const isRequired = ['nombre', 'apellido', 'dni', 'telefono', 'direccion', 'rol'].includes(name) ||
-                       (formData.rol === 'colaborador' && name === 'tipoColaborador');
+    const isRequired = ['nombre', 'apellido', 'dni', 'telefono', 'direccion', 'email', 'rol'].includes(name) ||
+                       (formData.rol === 'administrativo' && name === 'tipoColaborador');
     if (isRequired || val) {
       return 'input-field field-ok';
     }
@@ -150,7 +183,7 @@ export function PersonaForm({ persona, onClose }) {
     setTouched(allTouched);
 
     // 1. Validaciones del cliente
-    const basicFields = ['nombre', 'apellido', 'dni', 'telefono', 'direccion', 'rol'];
+    const basicFields = ['nombre', 'apellido', 'dni', 'telefono', 'direccion', 'email', 'rol'];
     for (const f of basicFields) {
       const err = validateField(f, formData[f], formData.rol);
       if (err) {
@@ -159,7 +192,35 @@ export function PersonaForm({ persona, onClose }) {
       }
     }
 
-    if (formData.rol === 'colaborador') {
+    if (formData.rol === 'profesor') {
+      const errHoras = validateField('cantidadHoras', formData.cantidadHoras, formData.rol);
+      if (errHoras) {
+        toastError({ title: "Error de Validación", text: errHoras });
+        return;
+      }
+      const errClase = validateField('valorClasePorHora', formData.valorClasePorHora, formData.rol);
+      if (errClase) {
+        toastError({ title: "Error de Validación", text: errClase });
+        return;
+      }
+      const errCurso = validateField('valorCursoCompleto', formData.valorCursoCompleto, formData.rol);
+      if (errCurso) {
+        toastError({ title: "Error de Validación", text: errCurso });
+        return;
+      }
+      const errMinAl = validateField('minimoAlumnosGrupo', formData.minimoAlumnosGrupo, formData.rol);
+      if (errMinAl) {
+        toastError({ title: "Error de Validación", text: errMinAl });
+        return;
+      }
+      const errDesc = validateField('porcentajeDescuentoGrupo', formData.porcentajeDescuentoGrupo, formData.rol);
+      if (errDesc) {
+        toastError({ title: "Error de Validación", text: errDesc });
+        return;
+      }
+    }
+
+    if (formData.rol === 'administrativo') {
       const errTipo = validateField('tipoColaborador', formData.tipoColaborador, formData.rol);
       if (errTipo) {
         toastError({ title: "Error de Validación", text: errTipo });
@@ -184,19 +245,25 @@ export function PersonaForm({ persona, onClose }) {
         dni: formData.dni,
         telefono: formData.telefono,
         direccion: formData.direccion,
+        correoElectronico: formData.email,
         rol: formData.rol,
         // Alumno
         colegio: formData.rol === 'alumno' ? formData.colegio : null,
         gradoCurso: formData.rol === 'alumno' ? formData.gradoCurso : null,
         nivelEducativo: formData.rol === 'alumno' ? formData.nivelEducativo : null,
-        // Docente
-        especialidades: formData.rol === 'docente' ? formData.especialidades : null,
-        titulo: formData.rol === 'docente' ? formData.titulo : null,
-        fechaIngresoDocente: formData.rol === 'docente' && formData.fechaIngreso ? formData.fechaIngreso : null,
-        // Colaborador
-        tipoColaborador: formData.rol === 'colaborador' ? formData.tipoColaborador : null,
-        fechaContratacion: formData.rol === 'colaborador' && formData.fechaContratacion ? formData.fechaContratacion : null,
-        salario: formData.rol === 'colaborador' && formData.salario ? parseFloat(formData.salario) : null
+        // Profesor
+        especialidades: formData.rol === 'profesor' ? formData.especialidades : null,
+        titulo: formData.rol === 'profesor' ? formData.titulo : null,
+        fechaIngresoDocente: formData.rol === 'profesor' && formData.fechaIngreso ? formData.fechaIngreso : null,
+        cantidadHoras: formData.rol === 'profesor' && formData.cantidadHoras !== '' ? parseFloat(formData.cantidadHoras) : null,
+        valorClasePorHora: formData.rol === 'profesor' ? (formData.valorClasePorHora !== '' ? parseFloat(formData.valorClasePorHora) : 0) : null,
+        valorCursoCompleto: formData.rol === 'profesor' ? (formData.valorCursoCompleto !== '' ? parseFloat(formData.valorCursoCompleto) : 0) : null,
+        minimoAlumnosGrupo: formData.rol === 'profesor' && formData.minimoAlumnosGrupo !== '' ? parseInt(formData.minimoAlumnosGrupo, 10) : null,
+        porcentajeDescuentoGrupo: formData.rol === 'profesor' && formData.porcentajeDescuentoGrupo !== '' ? parseFloat(formData.porcentajeDescuentoGrupo) : null,
+        // Administrativo
+        tipoColaborador: formData.rol === 'administrativo' ? formData.tipoColaborador : null,
+        fechaContratacion: formData.rol === 'administrativo' && formData.fechaContratacion ? formData.fechaContratacion : null,
+        salario: formData.rol === 'administrativo' && formData.salario ? parseFloat(formData.salario) : null
       };
 
       if (isEditing) {
@@ -214,6 +281,7 @@ export function PersonaForm({ persona, onClose }) {
           dni: '',
           telefono: '',
           direccion: '',
+          email: '',
           rol: '',
           colegio: '',
           gradoCurso: '',
@@ -221,6 +289,11 @@ export function PersonaForm({ persona, onClose }) {
           especialidades: '',
           titulo: '',
           fechaIngreso: '',
+          cantidadHoras: '',
+          valorClasePorHora: '',
+          valorCursoCompleto: '',
+          minimoAlumnosGrupo: '',
+          porcentajeDescuentoGrupo: '',
           tipoColaborador: '',
           fechaContratacion: '',
           salario: ''
@@ -240,7 +313,7 @@ export function PersonaForm({ persona, onClose }) {
 
   return (
     <div className="personasWrap">
-      <div className="personasPanel" style={{ width: '100%', maxWidth: '600px' }}>
+      <div className="personasPanel" style={{ width: '100%', maxWidth: '460px' }}>
         <div className="panelHeader">
           <div>
             <div className="panelTitle">{isEditing ? 'Editar Persona' : 'Alta de Persona'}</div>
@@ -279,12 +352,17 @@ export function PersonaForm({ persona, onClose }) {
               {renderError('direccion')}
             </div>
             <div className="formGroup full-width">
+              <label>Correo Electrónico *</label>
+              <input required name="email" type="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} className={getInputClass('email')} placeholder="ejemplo@correo.com" />
+              {renderError('email')}
+            </div>
+            <div className="formGroup full-width">
               <label>Rol Asignado *</label>
               <select required name="rol" value={formData.rol} onChange={handleChange} onBlur={handleBlur} className={getSelectClass('rol')} disabled={isEditing}>
                 <option value="" disabled>Seleccione un rol...</option>
                 <option value="alumno">Alumno</option>
-                <option value="docente">Docente</option>
-                <option value="colaborador">Colaborador</option>
+                <option value="profesor">Profesor</option>
+                <option value="administrativo">Administrativo</option>
               </select>
               {renderError('rol')}
             </div>
@@ -311,6 +389,8 @@ export function PersonaForm({ persona, onClose }) {
                     <option value="">Seleccionar...</option>
                     <option value="primario">Primario</option>
                     <option value="secundario">Secundario</option>
+                    <option value="terciario">Terciario</option>
+                    <option value="universitario">Universitario</option>
                   </select>
                   {renderError('nivelEducativo')}
                 </div>
@@ -318,9 +398,9 @@ export function PersonaForm({ persona, onClose }) {
             </>
           )}
 
-          {formData.rol === 'docente' && (
+          {formData.rol === 'profesor' && (
             <>
-              <h3 className="sectionTitle">Datos Profesionales (Docente)</h3>
+              <h3 className="sectionTitle">Datos Profesionales (Profesor)</h3>
               <div className="formGrid">
                 <div className="formGroup full-width">
                   <label>Especialidades</label>
@@ -337,16 +417,41 @@ export function PersonaForm({ persona, onClose }) {
                   <input type="date" name="fechaIngreso" value={formData.fechaIngreso} onChange={handleChange} onBlur={handleBlur} className={getInputClass('fechaIngreso')} />
                   {renderError('fechaIngreso')}
                 </div>
+                <div className="formGroup">
+                  <label>Cantidad de Horas</label>
+                  <input type="number" min="0" step="0.5" name="cantidadHoras" value={formData.cantidadHoras} onChange={handleChange} onBlur={handleBlur} className={getInputClass('cantidadHoras')} placeholder="Ej: 20" />
+                  {renderError('cantidadHoras')}
+                </div>
+                <div className="formGroup">
+                  <label>Valor Clase por Hora ($)</label>
+                  <input type="number" min="0" step="0.01" name="valorClasePorHora" value={formData.valorClasePorHora} onChange={handleChange} onBlur={handleBlur} className={getInputClass('valorClasePorHora')} placeholder="Ej: 1500" />
+                  {renderError('valorClasePorHora')}
+                </div>
+                <div className="formGroup">
+                  <label>Valor Curso Completo ($)</label>
+                  <input type="number" min="0" step="0.01" name="valorCursoCompleto" value={formData.valorCursoCompleto} onChange={handleChange} onBlur={handleBlur} className={getInputClass('valorCursoCompleto')} placeholder="Ej: 15000" />
+                  {renderError('valorCursoCompleto')}
+                </div>
+                <div className="formGroup">
+                  <label>Mín. Alumnos Grupo (Cant.)</label>
+                  <input type="number" min="1" name="minimoAlumnosGrupo" value={formData.minimoAlumnosGrupo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('minimoAlumnosGrupo')} placeholder="Ej: 3" />
+                  {renderError('minimoAlumnosGrupo')}
+                </div>
+                <div className="formGroup">
+                  <label>Descuento Grupo (%)</label>
+                  <input type="number" min="0" max="100" name="porcentajeDescuentoGrupo" value={formData.porcentajeDescuentoGrupo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('porcentajeDescuentoGrupo')} placeholder="Ej: 10" />
+                  {renderError('porcentajeDescuentoGrupo')}
+                </div>
               </div>
             </>
           )}
 
-          {formData.rol === 'colaborador' && (
+          {formData.rol === 'administrativo' && (
             <>
-              <h3 className="sectionTitle">Datos Laborales (Colaborador)</h3>
+              <h3 className="sectionTitle">Datos Laborales (Administrativo)</h3>
               <div className="formGrid">
                 <div className="formGroup full-width">
-                  <label>Tipo de Colaborador *</label>
+                  <label>Tipo de Administrativo *</label>
                   <input required name="tipoColaborador" value={formData.tipoColaborador} onChange={handleChange} onBlur={handleBlur} className={getInputClass('tipoColaborador')} placeholder="Ej: Secretaría, Mantenimiento" />
                   {renderError('tipoColaborador')}
                 </div>

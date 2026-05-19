@@ -17,6 +17,9 @@ export function DashboardSuperShell({ children }) {
         </div>
 
         <nav className="dashNav">
+          <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/personas">
+            Directorio (ABM)
+          </NavLink>
           <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/roles">
             Gestión de roles
           </NavLink>

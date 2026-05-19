@@ -1,7 +1,23 @@
 import { useEffect, useState } from 'react';
 import { PersonaForm } from './PersonaForm';
+import { PersonaDetailModal } from './PersonaDetailModal';
 import { getPersonas, togglePersonaEstado } from '../../../services/personas';
 import './personas.css';
+
+const formatFecha = (fechaStr) => {
+  if (!fechaStr) return '—';
+  try {
+    const date = new Date(fechaStr);
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return '—';
+  }
+};
 
 export function PersonasDashboard() {
   const [personas, setPersonas] = useState([]);
@@ -11,6 +27,7 @@ export function PersonasDashboard() {
   const [filterState, setFilterState] = useState('activo');
   const [showForm, setShowForm] = useState(false);
   const [editingPersona, setEditingPersona] = useState(null);
+  const [selectedDetailPersona, setSelectedDetailPersona] = useState(null);
 
   // Estados de paginación del servidor (HU15)
   const [paginaActual, setPaginaActual] = useState(1);
@@ -77,6 +94,13 @@ export function PersonasDashboard() {
     }
   };
 
+  const handleRowClick = (e, persona) => {
+    if (e.target.closest('.btn-icon') || e.target.closest('.actions-col')) {
+      return;
+    }
+    setSelectedDetailPersona(persona);
+  };
+
   if (showForm) {
     return (
       <PersonaForm 
@@ -94,7 +118,7 @@ export function PersonasDashboard() {
 
   return (
     <div className="personasWrap">
-      <div className="personasPanel" style={{ width: '100%', maxWidth: '800px' }}>
+      <div className="personasPanel" style={{ width: '100%', maxWidth: '100%' }}>
         <div className="panelHeader">
           <div>
             <div className="panelTitle">Directorio de Personas</div>
@@ -113,8 +137,8 @@ export function PersonasDashboard() {
           <select className="select-field" value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
             <option value="todos">Todos los roles</option>
             <option value="alumno">Alumnos</option>
-            <option value="docente">Docentes</option>
-            <option value="colaborador">Colaboradores</option>
+            <option value="profesor">Profesores</option>
+            <option value="administrativo">Administrativos</option>
           </select>
           <select className="select-field" value={filterState} onChange={(e) => setFilterState(e.target.value)}>
             <option value="todos">Todos los estados</option>
@@ -133,6 +157,7 @@ export function PersonasDashboard() {
                   <th>Nombre Completo</th>
                   <th>DNI</th>
                   <th>Rol</th>
+                  <th>F. Registro</th>
                   <th>Estado</th>
                   <th className="actions-col">Acciones</th>
                 </tr>
@@ -140,19 +165,25 @@ export function PersonasDashboard() {
               <tbody>
                 {personas.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="emptyState">No se encontraron resultados.</td>
+                    <td colSpan="6" className="emptyState">No se encontraron resultados.</td>
                   </tr>
                 ) : (
                   personas.map(p => {
                     const nombre = `${p.nombre || p.Nombre || ''} ${p.apellido || p.Apellido || ''}`;
-                    const rol = p.rol?.nombre || p.rol?.Nombre || '—';
+                    let rol = p.rol?.nombre || p.rol?.Nombre || '—';
+                    if (rol.toLowerCase() === 'secretaria') rol = 'administrativo';
                     const estado = p.activo ? 'activo' : 'inactivo';
                     
                     return (
-                      <tr key={p.id || p.Id} className={!p.activo ? 'row-inactive' : ''}>
+                      <tr 
+                        key={p.id || p.Id} 
+                        className={!p.activo ? 'row-inactive' : ''}
+                        onClick={(e) => handleRowClick(e, p)}
+                      >
                         <td className="fw-600">{nombre}</td>
                         <td>{p.dni || p.Dni}</td>
                         <td className="capitalize">{rol}</td>
+                        <td>{formatFecha(p.fechaRegistro || p.FechaRegistro)}</td>
                         <td>
                           <span className={`badge ${estado}`}>
                             {estado}
@@ -200,6 +231,13 @@ export function PersonasDashboard() {
           </div>
         </div>
       </div>
+
+      {selectedDetailPersona && (
+        <PersonaDetailModal 
+          persona={selectedDetailPersona} 
+          onClose={() => setSelectedDetailPersona(null)} 
+        />
+      )}
     </div>
   );
 }

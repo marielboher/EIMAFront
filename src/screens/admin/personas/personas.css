@@ -3,7 +3,7 @@
   min-height: 100svh;
   display: flex;
   justify-content: center;
-  padding: 32px 16px;
+  padding: 16px;
   box-sizing: border-box;
 }
 
@@ -11,7 +11,7 @@
   background: var(--surface);
   border: 0.5px solid var(--border);
   border-radius: 12px;
-  padding: 24px;
+  padding: 16px;
   box-shadow: var(--shadow);
   text-align: left;
 }
@@ -20,30 +20,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-2);
 }
 
 .panelTitle {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-h);
 }
 
 .panelSub {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--muted-2);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 /* Campos e Inputs */
 .input-field, .select-field {
   width: 100%;
-  padding: 10px 12px;
+  padding: 6px 10px;
   border: 0.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 13px;
   font-family: var(--sans);
   background: var(--surface);
   color: var(--text);
@@ -136,32 +136,32 @@
 .personaForm {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .sectionTitle {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--eima-blue);
   border-bottom: 1px solid var(--border-2);
-  padding-bottom: 8px;
-  margin: 16px 0 0 0;
+  padding-bottom: 4px;
+  margin: 8px 0 0 0;
 }
 
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 8px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
 .formGroup label {
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text);
 }
@@ -171,9 +171,9 @@
 .formActions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
   border-top: 1px solid var(--border-2);
 }
 
@@ -246,3 +246,244 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Efectos de Hover y Selección sobre la Grilla (HU15) */
+.personasTable tbody tr {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.personasTable tbody tr:hover {
+  background: color-mix(in srgb, var(--eima-gold) 5%, var(--surface-2));
+  transform: translateY(-0.5px);
+  box-shadow: inset 0 -1px 0 var(--border), 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.personasTable tbody tr:hover td {
+  color: var(--text-h);
+}
+
+/* Modal de Ficha Detallada (Diseño de Alta Gama) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.detail-modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 580px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  text-align: left; /* FIX: Evitar que herede text-align: center global */
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.detail-header {
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--border-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.detail-rol-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.detail-rol-badge.rol-alumno {
+  background: rgba(74, 155, 111, 0.12);
+  color: var(--eima-green);
+}
+
+.detail-rol-badge.rol-profesor {
+  background: rgba(230, 175, 46, 0.15);
+  color: var(--eima-gold);
+}
+
+.detail-rol-badge.rol-admin {
+  background: rgba(43, 108, 176, 0.12);
+  color: var(--eima-blue);
+}
+
+.detail-rol-badge.rol-default {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.detail-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-h);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.4px;
+}
+
+.detail-dni-sub {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.detail-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--muted-2);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  margin-top: -6px;
+  margin-right: -10px;
+}
+
+.detail-close-btn:hover {
+  background: var(--surface-2);
+  color: var(--text-h);
+}
+
+.detail-body {
+  padding: 20px 28px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-section.highlight-sec {
+  background: color-mix(in srgb, var(--surface-2) 40%, var(--bg));
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--border);
+}
+
+.detail-section.meta-sec {
+  background: var(--surface-2);
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 0.5px solid var(--border);
+  margin-top: 10px;
+}
+
+.detail-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 0;
+  border-left: 3px solid var(--eima-gold);
+  padding-left: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 20px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* FIX: Asegura que el contenido (como el badge) se alinee a la izquierda */
+  text-align: left;
+  gap: 4px;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-2);
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.detail-value.highlight-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--eima-blue);
+}
+
+.detail-value.percent-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--eima-red);
+}
+
+.detail-status-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-status-badge.activo {
+  background: rgba(74, 155, 111, 0.15);
+  color: var(--eima-green);
+}
+
+.detail-status-badge.inactivo {
+  background: rgba(212, 88, 74, 0.15);
+  color: var(--eima-red);
+}
+
+.detail-footer {
+  padding: 16px 28px 20px;
+  border-top: 1px solid var(--border-2);
+  display: flex;
+  justify-content: flex-end;
+}
+
