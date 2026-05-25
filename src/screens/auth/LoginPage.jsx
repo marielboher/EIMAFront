@@ -12,7 +12,7 @@ const DASHBOARD_SUPER_ADMIN_PATHS = new Set([
   '/dashboard/roles',
   '/dashboard/alumnos',
   '/dashboard/profesores',
-  '/dashboard/secretaria',
+  '/dashboard/colaboradores',
   '/dashboard/materias',
 ])
 

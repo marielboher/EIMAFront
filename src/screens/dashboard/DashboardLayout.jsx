@@ -29,8 +29,8 @@ export function DashboardSuperShell({ children }) {
           <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/profesores">
             Profesores
           </NavLink>
-          <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/secretaria">
-            Secretaría
+          <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/colaboradores">
+            Colaboradores
           </NavLink>
           <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/materias">
             Materias

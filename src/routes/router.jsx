@@ -106,10 +106,10 @@ export const router = createBrowserRouter([
             ),
           },
           {
-            path: 'secretaria',
+            path: 'colaboradores',
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
-                <DashboardPersonasByRol title="Secretaría" rolNombre="secretaria" />
+                <DashboardPersonasByRol title="Colaboradores" rolNombre="administrativo" />
               </RequireRole>
             ),
           },

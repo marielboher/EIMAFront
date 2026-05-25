@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getPersonas } from '../../services/personas'
-import { getRoles } from '../../services/roles'
 import './dashboardPersonasByRol.css'
-
-function nombreRolNorm(r) {
-  return String(r?.nombre ?? r?.Nombre ?? '').toLowerCase()
-}
 
 export function DashboardPersonasByRol({ title, rolNombre }) {
   const rolKey = String(rolNombre ?? '').toLowerCase()
@@ -20,17 +15,9 @@ export function DashboardPersonasByRol({ title, rolNombre }) {
       setError(null)
       setLoading(true)
       try {
-        const roles = await getRoles({ signal: ac.signal })
-        const list = Array.isArray(roles) ? roles : []
-        const match = list.find((r) => nombreRolNorm(r) === rolKey)
-        const rolId = match?.id ?? match?.Id
-        if (rolId == null) {
-          setPeople([])
-          setError(`No se encontró el rol "${rolKey}" en el servidor.`)
-          return
-        }
-        const data = await getPersonas({ rolId, signal: ac.signal })
-        setPeople(Array.isArray(data) ? data : [])
+        const res = await getPersonas({ rol: rolKey, limite: 1000, signal: ac.signal })
+        const list = Array.isArray(res?.datos) ? res.datos : []
+        setPeople(list)
       } catch (e) {
         if (!ac.signal.aborted) {
           setPeople([])
@@ -52,10 +39,6 @@ export function DashboardPersonasByRol({ title, rolNombre }) {
           Inicio del panel
         </Link>
       </div>
-      <p className="dashPersonasSub">
-        Listado filtrado con <code className="dashPersonasCode">GET /api/Personas?rolId=…</code> según el id del rol{' '}
-        <strong>{rolKey}</strong>.
-      </p>
 
       {loading ? <div className="dashPersonasMsg">Cargando…</div> : null}
       {error ? <div className="dashPersonasErr">{error}</div> : null}
