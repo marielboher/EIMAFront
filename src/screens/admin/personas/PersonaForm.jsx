@@ -360,6 +360,7 @@ export function PersonaForm({ persona, onClose }) {
               <label>Rol Asignado *</label>
               <select required name="rol" value={formData.rol} onChange={handleChange} onBlur={handleBlur} className={getSelectClass('rol')} disabled={isEditing}>
                 <option value="" disabled>Seleccione un rol...</option>
+                <option value="super_admin">Super Administrador</option>
                 <option value="alumno">Alumno</option>
                 <option value="profesor">Profesor</option>
                 <option value="administrativo">Administrativo</option>

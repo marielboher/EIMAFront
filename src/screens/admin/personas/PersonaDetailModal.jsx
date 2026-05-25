@@ -219,8 +219,8 @@ export function PersonaDetailModal({ persona, onClose }) {
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Fecha de Registro (Alta)</span>
-                <span className="detail-value">{formatFechaDetalle(persona.fechaRegistro || persona.FechaRegistro)}</span>
+                <span className="detail-label">{persona.activo ? 'Fecha de Registro (Alta)' : 'Fecha de Baja'}</span>
+                <span className="detail-value">{formatFechaDetalle(persona.activo ? (persona.fechaRegistro || persona.FechaRegistro) : (persona.fechaBaja || persona.FechaBaja))}</span>
               </div>
             </div>
           </div>

@@ -158,6 +158,7 @@ export function PersonasDashboard() {
                   <th>DNI</th>
                   <th>Rol</th>
                   <th>F. Registro</th>
+                  <th>F. Baja</th>
                   <th>Estado</th>
                   <th className="actions-col">Acciones</th>
                 </tr>
@@ -184,6 +185,7 @@ export function PersonasDashboard() {
                         <td>{p.dni || p.Dni}</td>
                         <td className="capitalize">{rol}</td>
                         <td>{formatFecha(p.fechaRegistro || p.FechaRegistro)}</td>
+                        <td>{formatFecha(p.fechaBaja || p.FechaBaja)}</td>
                         <td>
                           <span className={`badge ${estado}`}>
                             {estado}
