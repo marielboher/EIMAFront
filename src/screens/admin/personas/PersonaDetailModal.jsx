@@ -63,6 +63,9 @@ export function PersonaDetailModal({ persona, onClose }) {
       case 'secretaria':
       case 'colaborador':
         return { text: 'Administrativo', className: 'rol-admin' };
+      case 'superadmin':
+      case 'super_admin':
+        return { text: 'Super Administrador', className: 'rol-superadmin' };
       default:
         const rawRole = persona.rol ?? persona.Rol;
         const displayName = typeof rawRole === 'object'
@@ -219,8 +222,8 @@ export function PersonaDetailModal({ persona, onClose }) {
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">{persona.activo ? 'Fecha de Registro (Alta)' : 'Fecha de Baja'}</span>
-                <span className="detail-value">{formatFechaDetalle(persona.activo ? (persona.fechaRegistro || persona.FechaRegistro) : (persona.fechaBaja || persona.FechaBaja))}</span>
+                <span className="detail-label">Fecha de Baja</span>
+                <span className="detail-value">{persona.activo ? '—' : formatFechaSimple(persona.fechaBaja || persona.FechaBaja)}</span>
               </div>
             </div>
           </div>

@@ -50,7 +50,7 @@ export function PersonasDashboard() {
       const estado = options.estado !== undefined ? options.estado : filterState;
       const buscar = options.buscar !== undefined ? options.buscar : search;
       const pagina = options.pagina !== undefined ? options.pagina : paginaActual;
-      const limite = 20;
+      const limite = 5;
 
       const res = await getPersonas({ rol, estado, buscar, pagina, limite });
       
@@ -136,6 +136,7 @@ export function PersonasDashboard() {
           />
           <select className="select-field" value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
             <option value="todos">Todos los roles</option>
+            <option value="super_admin">SuperAdmin</option>
             <option value="alumno">Alumnos</option>
             <option value="profesor">Profesores</option>
             <option value="administrativo">Administrativos</option>
@@ -173,6 +174,7 @@ export function PersonasDashboard() {
                     const nombre = `${p.nombre || p.Nombre || ''} ${p.apellido || p.Apellido || ''}`;
                     let rol = p.rol?.nombre || p.rol?.Nombre || '—';
                     if (rol.toLowerCase() === 'secretaria') rol = 'administrativo';
+                    if (rol.toLowerCase() === 'super_admin' || rol.toLowerCase() === 'superadmin') rol = 'SuperAdmin';
                     const estado = p.activo ? 'activo' : 'inactivo';
                     
                     return (
