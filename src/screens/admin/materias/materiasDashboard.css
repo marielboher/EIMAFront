@@ -1,0 +1,195 @@
+.materiasWrap {
+  background: var(--bg);
+  min-height: 100svh;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.materiasPanel {
+  width: 100%;
+  max-width: 900px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sectionSubTitleTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--eima-blue);
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Card para agregar */
+.addSpecialtyCard {
+  background: color-mix(in srgb, var(--surface-2) 30%, var(--bg));
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.addSpecialtyForm {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.new-specialty-input {
+  flex: 1;
+  min-width: 250px;
+  height: 38px;
+}
+
+/* Buscador e Info de total */
+.searchAndMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-2);
+  padding-bottom: 16px;
+}
+
+.search-specialty-input {
+  max-width: 320px;
+  height: 38px;
+}
+
+.metaInfo {
+  font-size: 13px;
+  color: var(--muted-2);
+}
+
+.metaInfo strong {
+  color: var(--text-h);
+  font-size: 15px;
+}
+
+/* Grid de especialidades */
+.specialtiesContainer {
+  flex: 1;
+}
+
+.specialtiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+/* Tarjeta individual de Especialidad */
+.specialtyCard {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: popIn 0.2s ease-out;
+}
+
+.specialtyCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--eima-gold);
+  background: color-mix(in srgb, var(--eima-gold) 3%, var(--surface));
+}
+
+.specialtyName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.deleteSpecialtyBtn {
+  font-size: 20px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-2);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteSpecialtyBtn:hover {
+  background: rgba(217, 83, 79, 0.1);
+  color: var(--eima-red) !important;
+  transform: scale(1.1);
+}
+
+.emptyStateSpecialties {
+  text-align: center;
+  color: var(--muted-2);
+  padding: 40px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  border: 1px dashed var(--border-2);
+  font-size: 14px;
+}
+
+/* Animaciones */
+@keyframes slideUp {
+  from { transform: translateY(15px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsivo */
+@media (max-width: 480px) {
+  .addSpecialtyForm {
+    flex-direction: column;
+  }
+  .new-specialty-input {
+    width: 100%;
+  }
+  .search-specialty-input {
+    max-width: 100%;
+    width: 100%;
+  }
+  .searchAndMetaRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .specialtiesGrid {
+    grid-template-columns: 1fr;
+  }
+}

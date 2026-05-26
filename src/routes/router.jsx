@@ -6,6 +6,7 @@ import { LoginPage } from '../screens/auth/LoginPage.jsx'
 import { DashboardRoot } from '../screens/dashboard/DashboardRoot.jsx'
 import { DashboardIndex, DashboardCatchAll } from '../screens/dashboard/DashboardIndex.jsx'
 import { DashboardPlaceholder } from '../screens/dashboard/DashboardPlaceholder.jsx'
+import { MateriasDashboard } from '../screens/admin/materias/MateriasDashboard.jsx'
 import { DashboardPersonasByRol } from '../screens/dashboard/DashboardPersonasByRol.jsx'
 import { RecoverPasswordPage } from '../screens/auth/RecoverPasswordPage.jsx'
 import { ResetPasswordPage } from '../screens/auth/ResetPasswordPage.jsx'
@@ -117,10 +118,7 @@ export const router = createBrowserRouter([
             path: 'materias',
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
-                <DashboardPlaceholder
-                  title="Materias"
-                  description="Próximamente: listado y gestión de materias (ABM / correlativas / asignaciones)."
-                />
+                <MateriasDashboard />
               </RequireRole>
             ),
           },

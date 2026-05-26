@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPersona, updatePersona } from '../../../services/personas';
 import { toastSuccess, toastError } from '../../../lib/alerts';
 import './personas.css';
 
 export function PersonaForm({ persona, onClose }) {
   const isEditing = !!persona;
-  
+
   const getUIFriendlyRole = (dbRol) => {
     if (!dbRol) return '';
     const name = (typeof dbRol === 'string' ? dbRol : dbRol.nombre || dbRol.Nombre || '').toLowerCase();
@@ -23,6 +23,10 @@ export function PersonaForm({ persona, onClose }) {
     }
   };
 
+  const standardTitles = ['profesorado', 'licenciatura', 'tecnicatura', 'doctorado'];
+  const dbTitulo = (persona?.titulo || persona?.Titulo || '').trim();
+  const isCustomTitle = dbTitulo && !standardTitles.includes(dbTitulo.toLowerCase());
+
   const [formData, setFormData] = useState({
     nombre: persona?.nombre || persona?.Nombre || '',
     apellido: persona?.apellido || persona?.Apellido || '',
@@ -37,7 +41,8 @@ export function PersonaForm({ persona, onClose }) {
     nivelEducativo: persona?.nivelEducativo || persona?.NivelEducativo || '',
     // Campos Profesor
     especialidades: persona?.especialidades || persona?.Especialidades || '',
-    titulo: persona?.titulo || persona?.Titulo || '',
+    titulo: isCustomTitle ? 'otro' : dbTitulo.toLowerCase(),
+    otroTitulo: isCustomTitle ? dbTitulo : '',
     fechaIngreso: formatDate(persona?.fechaIngresoDocente || persona?.FechaIngresoDocente),
     cantidadHoras: persona?.cantidadHoras || persona?.CantidadHoras || '',
     valorClasePorHora: persona?.valorClasePorHora || persona?.ValorClasePorHora || '',
@@ -52,6 +57,8 @@ export function PersonaForm({ persona, onClose }) {
 
   // Estado para controlar qué campos han sido interactuados (tocados)
   const [touched, setTouched] = useState({});
+
+
 
   // Lógica de validación en tiempo real (HU09, HU11)
   const validateField = (name, value, currentRol) => {
@@ -110,6 +117,9 @@ export function PersonaForm({ persona, onClose }) {
         const pct = parseFloat(value);
         if (isNaN(pct) || pct < 0 || pct > 100) return 'El descuento debe estar entre 0% y 100%.';
       }
+      if (name === 'otroTitulo' && formData.titulo === 'otro') {
+        if (!valString) return 'El nombre del título es obligatorio.';
+      }
     }
     if (currentRol === 'administrativo') {
       if (name === 'tipoColaborador') {
@@ -147,7 +157,7 @@ export function PersonaForm({ persona, onClose }) {
     if (err) return 'input-field field-err';
 
     const isRequired = ['nombre', 'apellido', 'dni', 'telefono', 'direccion', 'email', 'rol'].includes(name) ||
-                       (formData.rol === 'administrativo' && name === 'tipoColaborador');
+      (formData.rol === 'administrativo' && name === 'tipoColaborador');
     if (isRequired || val) {
       return 'input-field field-ok';
     }
@@ -172,9 +182,11 @@ export function PersonaForm({ persona, onClose }) {
     return null;
   };
 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Marcar todos los campos como interactuados para mostrar validación visual de errores
     const allTouched = {};
     Object.keys(formData).forEach(k => {
@@ -218,6 +230,11 @@ export function PersonaForm({ persona, onClose }) {
         toastError({ title: "Error de Validación", text: errDesc });
         return;
       }
+      const errOtroTitulo = validateField('otroTitulo', formData.otroTitulo, formData.rol);
+      if (errOtroTitulo) {
+        toastError({ title: "Error de Validación", text: errOtroTitulo });
+        return;
+      }
     }
 
     if (formData.rol === 'administrativo') {
@@ -253,7 +270,7 @@ export function PersonaForm({ persona, onClose }) {
         nivelEducativo: formData.rol === 'alumno' ? formData.nivelEducativo : null,
         // Profesor
         especialidades: formData.rol === 'profesor' ? formData.especialidades : null,
-        titulo: formData.rol === 'profesor' ? formData.titulo : null,
+        titulo: formData.rol === 'profesor' ? (formData.titulo === 'otro' ? formData.otroTitulo : formData.titulo) : null,
         fechaIngresoDocente: formData.rol === 'profesor' && formData.fechaIngreso ? formData.fechaIngreso : null,
         cantidadHoras: formData.rol === 'profesor' && formData.cantidadHoras !== '' ? parseFloat(formData.cantidadHoras) : null,
         valorClasePorHora: formData.rol === 'profesor' ? (formData.valorClasePorHora !== '' ? parseFloat(formData.valorClasePorHora) : 0) : null,
@@ -273,7 +290,7 @@ export function PersonaForm({ persona, onClose }) {
       } else {
         await createPersona(payload);
         toastSuccess({ text: "Persona registrada exitosamente." });
-        
+
         // Limpieza de campos tras el alta correcta (HU08 - CA04)
         setFormData({
           nombre: '',
@@ -288,6 +305,7 @@ export function PersonaForm({ persona, onClose }) {
           nivelEducativo: '',
           especialidades: '',
           titulo: '',
+          otroTitulo: '',
           fechaIngreso: '',
           cantidadHoras: '',
           valorClasePorHora: '',
@@ -299,13 +317,13 @@ export function PersonaForm({ persona, onClose }) {
           salario: ''
         });
         setTouched({});
-        
+
         onClose(true); // Indicar que se registró y refrescar la tabla
       }
     } catch (error) {
       console.error(error);
-      const backendError = error.response?.data?.errores?.[0]?.mensaje 
-        || error.response?.data?.mensaje 
+      const backendError = error.response?.data?.errores?.[0]?.mensaje
+        || error.response?.data?.mensaje
         || "Ocurrió un error al procesar los datos de la persona.";
       toastError({ title: isEditing ? "Error al Guardar" : "Error en el Alta", text: backendError });
     }
@@ -410,9 +428,23 @@ export function PersonaForm({ persona, onClose }) {
                 </div>
                 <div className="formGroup">
                   <label>Título</label>
-                  <input name="titulo" value={formData.titulo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('titulo')} />
+                  <select name="titulo" value={formData.titulo} onChange={handleChange} onBlur={handleBlur} className={getSelectClass('titulo')}>
+                    <option value="">Seleccionar...</option>
+                    <option value="profesorado">Profesorado</option>
+                    <option value="licenciatura">Licenciatura</option>
+                    <option value="tecnicatura">Tecnicatura</option>
+                    <option value="doctorado">Doctorado</option>
+                    <option value="otro">Otro</option>
+                  </select>
                   {renderError('titulo')}
                 </div>
+                {formData.titulo === 'otro' && (
+                  <div className="formGroup">
+                    <label>Especifique Título *</label>
+                    <input required name="otroTitulo" value={formData.otroTitulo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('otroTitulo')} placeholder="Ej: Maestro de Música" />
+                    {renderError('otroTitulo')}
+                  </div>
+                )}
                 <div className="formGroup">
                   <label>Fecha de Ingreso</label>
                   <input type="date" name="fechaIngreso" value={formData.fechaIngreso} onChange={handleChange} onBlur={handleBlur} className={getInputClass('fechaIngreso')} />
