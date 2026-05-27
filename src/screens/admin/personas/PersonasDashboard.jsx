@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { PersonaForm } from './PersonaForm';
 import { PersonaDetailModal } from './PersonaDetailModal';
 import { getPersonas, togglePersonaEstado } from '../../../services/personas';
+import { confirmDialog, toastSuccess, toastError } from '../../../lib/alerts';
 import './personas.css';
 
 const formatFecha = (fechaStr) => {
@@ -84,13 +85,37 @@ export function PersonasDashboard() {
   };
 
   const handleToggleState = async (personaId) => {
+    const persona = personas.find(p => p.id === personaId || p.Id === personaId);
+    const estaActivo = persona?.activo ?? true;
+    const nombre = `${persona?.nombre || persona?.Nombre || ''} ${persona?.apellido || persona?.Apellido || ''}`.trim();
+
+    const confirmado = await confirmDialog(
+      estaActivo
+        ? {
+            title: 'Dar de baja',
+            text: `¿Confirmás que querés dar de baja a ${nombre}? La persona perderá acceso al sistema.`,
+            confirmText: 'Sí, dar de baja',
+            cancelText: 'Cancelar',
+            danger: true,
+          }
+        : {
+            title: 'Reactivar persona',
+            text: `¿Confirmás que querés reactivar a ${nombre}? La persona recuperará el acceso al sistema.`,
+            confirmText: 'Sí, reactivar',
+            cancelText: 'Cancelar',
+            danger: false,
+          }
+    );
+    if (!confirmado) return;
+
     try {
       const result = await togglePersonaEstado(personaId);
-      setPersonas(prev => prev.map(p => 
+      setPersonas(prev => prev.map(p =>
         (p.id === personaId || p.Id === personaId) ? { ...p, activo: result.activo } : p
       ));
+      toastSuccess({ text: estaActivo ? `${nombre} fue dado de baja.` : `${nombre} fue reactivado.` });
     } catch (error) {
-      alert("No se pudo cambiar el estado de la persona.");
+      toastError({ title: 'Error', text: 'No se pudo cambiar el estado de la persona.' });
     }
   };
 

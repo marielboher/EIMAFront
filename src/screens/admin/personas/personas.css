@@ -492,6 +492,196 @@
   justify-content: flex-end;
 }
 
+/* ── SweetAlert2 custom ── */
+.swal-popup-custom {
+  border-radius: 16px !important;
+  border: 0.5px solid var(--border) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+  font-family: var(--sans) !important;
+  padding: 28px 24px 20px !important;
+}
+
+.swal2-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: var(--text-h) !important;
+}
+
+.swal2-html-container {
+  font-size: 14px !important;
+  color: var(--muted) !important;
+  line-height: 1.5 !important;
+}
+
+.swal-btn-confirm {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  font-family: var(--sans) !important;
+}
+
+.swal-btn-cancel {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  font-family: var(--sans) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  background: transparent !important;
+}
+
+.swal-btn-cancel:hover {
+  background: var(--surface-2) !important;
+}
+
+/* Panel del formulario — ancho fijo para que no varíe según el rol seleccionado */
+.personaFormPanel {
+  width: min(640px, 100%) !important;
+  max-width: 640px !important;
+  align-self: flex-start;
+  box-sizing: border-box;
+}
+
+/* Hint en labels */
+.labelHint {
+  font-size: 10px;
+  font-weight: normal;
+  color: var(--muted-2);
+  margin-left: 5px;
+}
+
+/* ── Sección de Materias ── */
+.materiasSection {
+  margin-top: 6px;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.materiasSectionHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border-2);
+  background: color-mix(in srgb, var(--surface-2) 60%, var(--surface));
+}
+
+.materiasSectionHint {
+  font-size: 11px;
+  color: var(--muted-2);
+}
+
+.materiasLoading {
+  padding: 16px 14px;
+  font-size: 13px;
+  color: var(--muted-2);
+}
+
+.materiasTableWrap {
+  overflow-x: auto;
+}
+
+.materiasTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.materiasTable th {
+  background: color-mix(in srgb, var(--surface-2) 60%, var(--surface));
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-2);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-2);
+}
+
+.materiasTable td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-2);
+  vertical-align: middle;
+}
+
+.materiasTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.materiasTable tbody tr:hover {
+  background: color-mix(in srgb, var(--eima-gold) 4%, var(--surface));
+}
+
+.select-materia {
+  width: 100%;
+  min-width: 0;
+}
+
+.input-materia {
+  width: 100%;
+  min-width: 0;
+  text-align: right;
+}
+
+.materiasTable td:first-child {
+  width: 45%;
+}
+
+.materiasTable td:not(:first-child):not(.col-remove) {
+  width: 17%;
+}
+
+.col-remove {
+  width: 32px;
+  text-align: center;
+}
+
+.btn-remove-materia {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--muted-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove-materia:hover {
+  color: var(--eima-red);
+  background: color-mix(in srgb, var(--eima-red) 10%, transparent);
+}
+
+.btn-add-materia {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 14px 12px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--eima-blue);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--sans);
+}
+
+.btn-add-materia:hover {
+  background: color-mix(in srgb, var(--eima-blue) 8%, var(--surface));
+  border-color: var(--eima-blue);
+}
+
 /* Especialidades Tag Picker */
 .specsContainer {
   display: flex;

@@ -1,29 +1,94 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPersona, updatePersona } from '../../../services/personas';
+import { getMaterias } from '../../../services/materias';
 import { toastSuccess, toastError } from '../../../lib/alerts';
 import './personas.css';
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function getUIFriendlyRole(dbRol) {
+  if (!dbRol) return '';
+  const name = (typeof dbRol === 'string' ? dbRol : dbRol.nombre || dbRol.Nombre || '').toLowerCase();
+  if (name === 'secretaria') return 'administrativo';
+  return name;
+}
+
+function formatDate(dateVal) {
+  if (!dateVal) return '';
+  try { return new Date(dateVal).toISOString().split('T')[0]; } catch { return ''; }
+}
+
+const standardTitles = ['profesorado', 'licenciatura', 'tecnicatura', 'doctorado'];
+
+function emptyMateria() {
+  return { _key: Date.now() + Math.random(), materiaId: '', valorHora: '', cantAlumnos: '', cantHoras: '' };
+}
+
+// ── validación ────────────────────────────────────────────────────────────────
+
+function validateField(name, value, rol, titulo) {
+  const v = String(value ?? '').trim();
+  if (name === 'nombre')    return v ? '' : 'El nombre es obligatorio.';
+  if (name === 'apellido')  return v ? '' : 'El apellido es obligatorio.';
+  if (name === 'dni') {
+    if (!v) return 'El DNI es obligatorio.';
+    if (!/^\d+$/.test(v)) return 'El DNI debe contener solo números.';
+    return '';
+  }
+  if (name === 'telefono') {
+    if (!v) return 'El teléfono es obligatorio.';
+    if (!/^\d+$/.test(v)) return 'Solo dígitos.';
+    if (v.length < 7 || v.length > 15) return 'Entre 7 y 15 dígitos.';
+    return '';
+  }
+  if (name === 'direccion') return v ? '' : 'La dirección es obligatoria.';
+  if (name === 'email') {
+    if (!v) return 'El correo es obligatorio.';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) return 'Formato inválido.';
+    return '';
+  }
+  if (name === 'rol') return value ? '' : 'Debe seleccionar un rol.';
+
+  if (rol === 'profesor') {
+    if (name === 'otroTitulo' && titulo === 'otro') {
+      return v ? '' : 'El nombre del título es obligatorio.';
+    }
+  }
+
+  if (rol === 'administrativo') {
+    if (name === 'tipoColaborador') return v ? '' : 'El tipo es obligatorio.';
+    if (name === 'fechaContratacion' && value && value < '2025-01-01')
+      return 'No puede ser anterior al 01/01/2025.';
+    if (name === 'salario' && v !== '') {
+      const n = parseFloat(v);
+      if (isNaN(n) || n <= 0) return 'Debe ser un número positivo.';
+    }
+  }
+  return '';
+}
+
+function validateMaterias(rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r.materiaId) return `Fila ${i + 1}: seleccioná una materia.`;
+    if (r.valorHora !== '' && (isNaN(parseFloat(r.valorHora)) || parseFloat(r.valorHora) < 0))
+      return `Fila ${i + 1}: valor/hora inválido.`;
+    if (r.cantAlumnos !== '' && (isNaN(parseInt(r.cantAlumnos)) || parseInt(r.cantAlumnos) < 1))
+      return `Fila ${i + 1}: cantidad de alumnos inválida.`;
+    if (r.cantHoras !== '' && (isNaN(parseFloat(r.cantHoras)) || parseFloat(r.cantHoras) <= 0))
+      return `Fila ${i + 1}: cantidad de horas inválida.`;
+    // duplicado
+    const ids = rows.map(x => x.materiaId).filter(Boolean);
+    if (ids.indexOf(r.materiaId) !== i) return `Fila ${i + 1}: materia repetida.`;
+  }
+  return '';
+}
+
+// ── componente principal ──────────────────────────────────────────────────────
 
 export function PersonaForm({ persona, onClose }) {
   const isEditing = !!persona;
 
-  const getUIFriendlyRole = (dbRol) => {
-    if (!dbRol) return '';
-    const name = (typeof dbRol === 'string' ? dbRol : dbRol.nombre || dbRol.Nombre || '').toLowerCase();
-    if (name === 'profesor') return 'profesor';
-    if (name === 'secretaria') return 'administrativo';
-    return name;
-  };
-
-  const formatDate = (dateVal) => {
-    if (!dateVal) return '';
-    try {
-      return new Date(dateVal).toISOString().split('T')[0];
-    } catch {
-      return '';
-    }
-  };
-
-  const standardTitles = ['profesorado', 'licenciatura', 'tecnicatura', 'doctorado'];
   const dbTitulo = (persona?.titulo || persona?.Titulo || '').trim();
   const isCustomTitle = dbTitulo && !standardTitles.includes(dbTitulo.toLowerCase());
 
@@ -35,349 +100,246 @@ export function PersonaForm({ persona, onClose }) {
     direccion: persona?.direccion || persona?.Direccion || '',
     email: persona?.cuentaUsuario?.correoElectronico || persona?.CuentaUsuario?.CorreoElectronico || '',
     rol: getUIFriendlyRole(persona?.rol || persona?.Rol),
-    // Campos Alumno
+    // Alumno
     colegio: persona?.colegio || persona?.Colegio || '',
     gradoCurso: persona?.gradoCurso || persona?.GradoCurso || '',
     nivelEducativo: persona?.nivelEducativo || persona?.NivelEducativo || '',
-    // Campos Profesor
-    especialidades: persona?.especialidades || persona?.Especialidades || '',
+    // Profesor
     titulo: isCustomTitle ? 'otro' : dbTitulo.toLowerCase(),
     otroTitulo: isCustomTitle ? dbTitulo : '',
     fechaIngreso: formatDate(persona?.fechaIngresoDocente || persona?.FechaIngresoDocente),
-    cantidadHoras: persona?.cantidadHoras || persona?.CantidadHoras || '',
-    valorClasePorHora: persona?.valorClasePorHora || persona?.ValorClasePorHora || '',
-    valorCursoCompleto: persona?.valorCursoCompleto || persona?.ValorCursoCompleto || '',
-    minimoAlumnosGrupo: persona?.minimoAlumnosGrupo || persona?.MinimoAlumnosGrupo || '',
-    porcentajeDescuentoGrupo: persona?.porcentajeDescuentoGrupo || persona?.PorcentajeDescuentoGrupo || '',
-    // Campos Administrativo
+    // Administrativo
     tipoColaborador: persona?.tipoColaborador?.tipo || persona?.TipoColaborador?.Tipo || '',
     fechaContratacion: formatDate(persona?.fechaContratacion || persona?.FechaContratacion),
-    salario: persona?.salario || persona?.Salario || ''
+    salario: persona?.salario || persona?.Salario || '',
   });
 
-  // Estado para controlar qué campos han sido interactuados (tocados)
-  const [touched, setTouched] = useState({});
-
-
-
-  // Lógica de validación en tiempo real (HU09, HU11)
-  const validateField = (name, value, currentRol) => {
-    const valString = String(value ?? '').trim();
-
-    if (name === 'nombre') {
-      if (!valString) return 'El nombre es obligatorio.';
-      return '';
+  // Grilla de materias (solo profesores)
+  const initMaterias = () => {
+    const pm = persona?.profesoresMaterias || persona?.ProfesoresMaterias || [];
+    if (pm.length > 0) {
+      return pm.map(m => ({
+        _key: Math.random(),
+        materiaId: String(m.materiaId || m.MateriaId || ''),
+        valorHora: m.valorHora ?? m.ValorHora ?? '',
+        cantAlumnos: m.cantAlumnos ?? m.CantAlumnos ?? '',
+        cantHoras: m.cantHoras ?? m.CantHoras ?? '',
+      }));
     }
-    if (name === 'apellido') {
-      if (!valString) return 'El apellido es obligatorio.';
-      return '';
-    }
-    if (name === 'dni') {
-      if (!valString) return 'El DNI es obligatorio.';
-      if (!/^\d+$/.test(valString)) return 'El DNI debe contener solo números.';
-      return '';
-    }
-    if (name === 'telefono') {
-      if (!valString) return 'El teléfono es obligatorio.';
-      if (!/^\d+$/.test(valString)) return 'El teléfono debe contener solo números.';
-      if (valString.length < 7 || valString.length > 15) return 'El teléfono debe tener entre 7 y 15 dígitos.';
-      return '';
-    }
-    if (name === 'direccion') {
-      if (!valString) return 'La dirección es obligatoria.';
-      return '';
-    }
-    if (name === 'email') {
-      if (!valString) return 'El correo electrónico es obligatorio.';
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(valString)) return 'Formato de correo electrónico inválido.';
-      return '';
-    }
-    if (name === 'rol') {
-      if (!value) return 'Debe seleccionar un rol.';
-      return '';
-    }
-    if (currentRol === 'profesor') {
-      if (name === 'cantidadHoras' && value !== '' && value !== null && value !== undefined) {
-        const val = parseFloat(value);
-        if (isNaN(val) || val <= 0) return 'Las horas deben ser un número positivo.';
-      }
-      if (name === 'valorClasePorHora' && value !== '' && value !== null && value !== undefined) {
-        const val = parseFloat(value);
-        if (isNaN(val) || val < 0) return 'El valor debe ser un número positivo.';
-      }
-      if (name === 'valorCursoCompleto' && value !== '' && value !== null && value !== undefined) {
-        const val = parseFloat(value);
-        if (isNaN(val) || val < 0) return 'El valor debe ser un número positivo.';
-      }
-      if (name === 'minimoAlumnosGrupo' && value !== '' && value !== null && value !== undefined) {
-        const val = parseInt(value, 10);
-        if (isNaN(val) || val <= 0) return 'Debe ser mayor que 0.';
-      }
-      if (name === 'porcentajeDescuentoGrupo' && value !== '' && value !== null && value !== undefined) {
-        const pct = parseFloat(value);
-        if (isNaN(pct) || pct < 0 || pct > 100) return 'El descuento debe estar entre 0% y 100%.';
-      }
-      if (name === 'otroTitulo' && formData.titulo === 'otro') {
-        if (!valString) return 'El nombre del título es obligatorio.';
-      }
-    }
-    if (currentRol === 'administrativo') {
-      if (name === 'tipoColaborador') {
-        if (!valString) return 'El tipo de administrativo es obligatorio.';
-      }
-      if (name === 'fechaContratacion' && value) {
-        if (value < '2025-01-01') {
-          return 'La fecha de contratación no puede ser anterior al 01/01/2025.';
-        }
-      }
-      if (name === 'salario' && value !== '' && value !== null && value !== undefined) {
-        const sal = parseFloat(value);
-        if (isNaN(sal) || sal <= 0) return 'El salario debe ser un número positivo.';
-      }
-    }
-    return '';
+    return [emptyMateria()];
   };
 
+  const [materias, setMaterias] = useState(initMaterias);
+  const [materiasDisponibles, setMateriasDisponibles] = useState([]);
+  const [loadingMaterias, setLoadingMaterias] = useState(false);
+  const [touched, setTouched] = useState({});
+  const [materiasError, setMateriasError] = useState('');
+  const abortRef = useRef(null);
+
+  // Cargar materias disponibles cuando el rol es profesor
+  useEffect(() => {
+    if (formData.rol !== 'profesor') return;
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    setLoadingMaterias(true);
+    getMaterias({ signal: ac.signal })
+      .then(data => {
+        if (!ac.signal.aborted) setMateriasDisponibles(data);
+      })
+      .catch(() => {})
+      .finally(() => { if (!ac.signal.aborted) setLoadingMaterias(false); });
+    return () => ac.abort();
+  }, [formData.rol]);
+
   const handleBlur = (e) => {
-    const { name } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
+    setTouched(prev => ({ ...prev, [e.target.name]: true }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Validar en tiempo real a medida que el usuario escribe
     setTouched(prev => ({ ...prev, [name]: true }));
   };
 
-  const getInputClass = (name) => {
-    const val = formData[name];
-    const err = validateField(name, val, formData.rol);
-    if (!touched[name] && !val) return 'input-field';
-    if (err) return 'input-field field-err';
+  // ── grilla materias ─────────────────────────────────────────────────────────
 
-    const isRequired = ['nombre', 'apellido', 'dni', 'telefono', 'direccion', 'email', 'rol'].includes(name) ||
-      (formData.rol === 'administrativo' && name === 'tipoColaborador');
-    if (isRequired || val) {
-      return 'input-field field-ok';
-    }
-    return 'input-field';
+  const handleMateriaChange = (index, field, value) => {
+    setMaterias(prev => prev.map((row, i) => i === index ? { ...row, [field]: value } : row));
+    setMateriasError('');
+  };
+
+  const addMateria = () => setMaterias(prev => [...prev, emptyMateria()]);
+
+  const removeMateria = (index) => {
+    setMaterias(prev => {
+      const next = prev.filter((_, i) => i !== index);
+      return next.length === 0 ? [emptyMateria()] : next;
+    });
+  };
+
+  // ── helpers de clase ────────────────────────────────────────────────────────
+
+  const getInputClass = (name) => {
+    const err = validateField(name, formData[name], formData.rol, formData.titulo);
+    if (!touched[name] && !formData[name]) return 'input-field';
+    return err ? 'input-field field-err' : 'input-field field-ok';
   };
 
   const getSelectClass = (name) => {
-    const val = formData[name];
-    const err = validateField(name, val, formData.rol);
-    if (!touched[name] && !val) return 'select-field';
-    if (err) return 'select-field field-err';
-    if (val) return 'select-field field-ok';
-    return 'select-field';
+    const err = validateField(name, formData[name], formData.rol, formData.titulo);
+    if (!touched[name] && !formData[name]) return 'select-field';
+    return err ? 'select-field field-err' : 'select-field field-ok';
   };
 
   const renderError = (name) => {
-    const val = formData[name];
-    const err = validateField(name, val, formData.rol);
-    if (touched[name] && err) {
-      return <div className="emsg">{err}</div>;
-    }
-    return null;
+    const err = validateField(name, formData[name], formData.rol, formData.titulo);
+    return touched[name] && err ? <div className="emsg">{err}</div> : null;
   };
 
-
+  // ── submit ──────────────────────────────────────────────────────────────────
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setTouched(Object.fromEntries(Object.keys(formData).map(k => [k, true])));
 
-    // Marcar todos los campos como interactuados para mostrar validación visual de errores
-    const allTouched = {};
-    Object.keys(formData).forEach(k => {
-      allTouched[k] = true;
-    });
-    setTouched(allTouched);
-
-    // 1. Validaciones del cliente
     const basicFields = ['nombre', 'apellido', 'dni', 'telefono', 'direccion', 'email', 'rol'];
     for (const f of basicFields) {
-      const err = validateField(f, formData[f], formData.rol);
-      if (err) {
-        toastError({ title: "Error de Validación", text: err });
-        return;
-      }
+      const err = validateField(f, formData[f], formData.rol, formData.titulo);
+      if (err) { toastError({ title: 'Validación', text: err }); return; }
     }
 
     if (formData.rol === 'profesor') {
-      const errHoras = validateField('cantidadHoras', formData.cantidadHoras, formData.rol);
-      if (errHoras) {
-        toastError({ title: "Error de Validación", text: errHoras });
-        return;
-      }
-      const errClase = validateField('valorClasePorHora', formData.valorClasePorHora, formData.rol);
-      if (errClase) {
-        toastError({ title: "Error de Validación", text: errClase });
-        return;
-      }
-      const errCurso = validateField('valorCursoCompleto', formData.valorCursoCompleto, formData.rol);
-      if (errCurso) {
-        toastError({ title: "Error de Validación", text: errCurso });
-        return;
-      }
-      const errMinAl = validateField('minimoAlumnosGrupo', formData.minimoAlumnosGrupo, formData.rol);
-      if (errMinAl) {
-        toastError({ title: "Error de Validación", text: errMinAl });
-        return;
-      }
-      const errDesc = validateField('porcentajeDescuentoGrupo', formData.porcentajeDescuentoGrupo, formData.rol);
-      if (errDesc) {
-        toastError({ title: "Error de Validación", text: errDesc });
-        return;
-      }
-      const errOtroTitulo = validateField('otroTitulo', formData.otroTitulo, formData.rol);
-      if (errOtroTitulo) {
-        toastError({ title: "Error de Validación", text: errOtroTitulo });
-        return;
-      }
+      const errTitulo = validateField('otroTitulo', formData.otroTitulo, formData.rol, formData.titulo);
+      if (errTitulo) { toastError({ title: 'Validación', text: errTitulo }); return; }
+      const errMat = validateMaterias(materias);
+      if (errMat) { toastError({ title: 'Materias', text: errMat }); setMateriasError(errMat); return; }
     }
 
     if (formData.rol === 'administrativo') {
-      const errTipo = validateField('tipoColaborador', formData.tipoColaborador, formData.rol);
-      if (errTipo) {
-        toastError({ title: "Error de Validación", text: errTipo });
-        return;
-      }
-      const errFecha = validateField('fechaContratacion', formData.fechaContratacion, formData.rol);
-      if (errFecha) {
-        toastError({ title: "Error de Validación", text: errFecha });
-        return;
-      }
-      const errSal = validateField('salario', formData.salario, formData.rol);
-      if (errSal) {
-        toastError({ title: "Error de Validación", text: errSal });
-        return;
+      for (const f of ['tipoColaborador', 'fechaContratacion', 'salario']) {
+        const err = validateField(f, formData[f], formData.rol, formData.titulo);
+        if (err) { toastError({ title: 'Validación', text: err }); return; }
       }
     }
 
-    try {
-      const payload = {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        dni: formData.dni,
-        telefono: formData.telefono,
-        direccion: formData.direccion,
-        correoElectronico: formData.email,
-        rol: formData.rol,
-        // Alumno
-        colegio: formData.rol === 'alumno' ? formData.colegio : null,
-        gradoCurso: formData.rol === 'alumno' ? formData.gradoCurso : null,
-        nivelEducativo: formData.rol === 'alumno' ? formData.nivelEducativo : null,
-        // Profesor
-        especialidades: formData.rol === 'profesor' ? formData.especialidades : null,
-        titulo: formData.rol === 'profesor' ? (formData.titulo === 'otro' ? formData.otroTitulo : formData.titulo) : null,
-        fechaIngresoDocente: formData.rol === 'profesor' && formData.fechaIngreso ? formData.fechaIngreso : null,
-        cantidadHoras: formData.rol === 'profesor' && formData.cantidadHoras !== '' ? parseFloat(formData.cantidadHoras) : null,
-        valorClasePorHora: formData.rol === 'profesor' ? (formData.valorClasePorHora !== '' ? parseFloat(formData.valorClasePorHora) : 0) : null,
-        valorCursoCompleto: formData.rol === 'profesor' ? (formData.valorCursoCompleto !== '' ? parseFloat(formData.valorCursoCompleto) : 0) : null,
-        minimoAlumnosGrupo: formData.rol === 'profesor' && formData.minimoAlumnosGrupo !== '' ? parseInt(formData.minimoAlumnosGrupo, 10) : null,
-        porcentajeDescuentoGrupo: formData.rol === 'profesor' && formData.porcentajeDescuentoGrupo !== '' ? parseFloat(formData.porcentajeDescuentoGrupo) : null,
-        // Administrativo
-        tipoColaborador: formData.rol === 'administrativo' ? formData.tipoColaborador : null,
-        fechaContratacion: formData.rol === 'administrativo' && formData.fechaContratacion ? formData.fechaContratacion : null,
-        salario: formData.rol === 'administrativo' && formData.salario ? parseFloat(formData.salario) : null
-      };
+    // ── build payload ─────────────────────────────────────────────────────────
+    const payload = {
+      nombre: formData.nombre,
+      apellido: formData.apellido,
+      dni: formData.dni,
+      telefono: formData.telefono,
+      direccion: formData.direccion,
+      correoElectronico: formData.email,
+      rol: formData.rol,
+      // Alumno
+      colegio: formData.rol === 'alumno' ? formData.colegio : null,
+      gradoCurso: formData.rol === 'alumno' ? formData.gradoCurso : null,
+      nivelEducativo: formData.rol === 'alumno' ? formData.nivelEducativo : null,
+      // Profesor
+      titulo: formData.rol === 'profesor'
+        ? (formData.titulo === 'otro' ? formData.otroTitulo : formData.titulo)
+        : null,
+      fechaIngresoDocente: formData.rol === 'profesor' && formData.fechaIngreso ? formData.fechaIngreso : null,
+      materias: formData.rol === 'profesor'
+        ? materias
+            .filter(m => m.materiaId)
+            .map(m => ({
+              materiaId: parseInt(m.materiaId, 10),
+              valorHora: m.valorHora !== '' ? parseFloat(m.valorHora) : null,
+              cantAlumnos: m.cantAlumnos !== '' ? parseInt(m.cantAlumnos, 10) : null,
+              cantHoras: m.cantHoras !== '' ? parseFloat(m.cantHoras) : null,
+            }))
+        : [],
+      // Administrativo
+      tipoColaborador: formData.rol === 'administrativo' ? formData.tipoColaborador : null,
+      fechaContratacion: formData.rol === 'administrativo' && formData.fechaContratacion
+        ? formData.fechaContratacion : null,
+      salario: formData.rol === 'administrativo' && formData.salario
+        ? parseFloat(formData.salario) : null,
+    };
 
+    try {
       if (isEditing) {
         await updatePersona(persona.id || persona.Id, payload);
-        toastSuccess({ text: "Datos actualizados exitosamente." });
+        toastSuccess({ text: 'Datos actualizados exitosamente.' });
         onClose(true);
       } else {
         await createPersona(payload);
-        toastSuccess({ text: "Persona registrada exitosamente." });
-
-        // Limpieza de campos tras el alta correcta (HU08 - CA04)
+        toastSuccess({ text: 'Persona registrada exitosamente.' });
         setFormData({
-          nombre: '',
-          apellido: '',
-          dni: '',
-          telefono: '',
-          direccion: '',
-          email: '',
-          rol: '',
-          colegio: '',
-          gradoCurso: '',
-          nivelEducativo: '',
-          especialidades: '',
-          titulo: '',
-          otroTitulo: '',
-          fechaIngreso: '',
-          cantidadHoras: '',
-          valorClasePorHora: '',
-          valorCursoCompleto: '',
-          minimoAlumnosGrupo: '',
-          porcentajeDescuentoGrupo: '',
-          tipoColaborador: '',
-          fechaContratacion: '',
-          salario: ''
+          nombre: '', apellido: '', dni: '', telefono: '', direccion: '', email: '', rol: '',
+          colegio: '', gradoCurso: '', nivelEducativo: '',
+          titulo: '', otroTitulo: '', fechaIngreso: '',
+          tipoColaborador: '', fechaContratacion: '', salario: '',
         });
+        setMaterias([emptyMateria()]);
         setTouched({});
-
-        onClose(true); // Indicar que se registró y refrescar la tabla
+        onClose(true);
       }
     } catch (error) {
-      console.error(error);
-      const backendError = error.response?.data?.errores?.[0]?.mensaje
+      const msg = error.response?.data?.errores?.[0]?.mensaje
         || error.response?.data?.mensaje
-        || "Ocurrió un error al procesar los datos de la persona.";
-      toastError({ title: isEditing ? "Error al Guardar" : "Error en el Alta", text: backendError });
+        || 'Ocurrió un error al procesar los datos.';
+      toastError({ title: isEditing ? 'Error al Guardar' : 'Error en el Alta', text: msg });
     }
   };
 
+  // ── render ──────────────────────────────────────────────────────────────────
+
   return (
     <div className="personasWrap">
-      <div className="personasPanel" style={{ width: '100%', maxWidth: '460px' }}>
+      <div className="personasPanel personaFormPanel">
         <div className="panelHeader">
           <div>
             <div className="panelTitle">{isEditing ? 'Editar Persona' : 'Alta de Persona'}</div>
             <div className="panelSub">
-              {isEditing ? `Modificando los datos de ${persona.nombre} ${persona.apellido}` : 'Complete los campos obligatorios para registrar una nueva persona.'}
+              {isEditing
+                ? `Modificando los datos de ${persona.nombre} ${persona.apellido}`
+                : 'Completá los campos obligatorios para registrar una nueva persona.'}
             </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="personaForm" noValidate>
+
+          {/* ── DATOS BÁSICOS (siempre visibles) ── */}
           <h3 className="sectionTitle">Datos Básicos</h3>
           <div className="formGrid">
             <div className="formGroup">
               <label>Nombre *</label>
-              <input required name="nombre" value={formData.nombre} onChange={handleChange} onBlur={handleBlur} className={getInputClass('nombre')} />
+              <input name="nombre" value={formData.nombre} onChange={handleChange} onBlur={handleBlur} className={getInputClass('nombre')} />
               {renderError('nombre')}
             </div>
             <div className="formGroup">
               <label>Apellido *</label>
-              <input required name="apellido" value={formData.apellido} onChange={handleChange} onBlur={handleBlur} className={getInputClass('apellido')} />
+              <input name="apellido" value={formData.apellido} onChange={handleChange} onBlur={handleBlur} className={getInputClass('apellido')} />
               {renderError('apellido')}
             </div>
             <div className="formGroup">
               <label>DNI *</label>
-              <input required name="dni" type="text" inputMode="numeric" value={formData.dni} onChange={handleChange} onBlur={handleBlur} className={getInputClass('dni')} />
+              <input name="dni" inputMode="numeric" value={formData.dni} onChange={handleChange} onBlur={handleBlur} className={getInputClass('dni')} />
               {renderError('dni')}
             </div>
             <div className="formGroup">
               <label>Teléfono *</label>
-              <input required name="telefono" type="tel" value={formData.telefono} onChange={handleChange} onBlur={handleBlur} className={getInputClass('telefono')} />
+              <input name="telefono" type="tel" value={formData.telefono} onChange={handleChange} onBlur={handleBlur} className={getInputClass('telefono')} />
               {renderError('telefono')}
             </div>
             <div className="formGroup full-width">
               <label>Dirección *</label>
-              <input required name="direccion" value={formData.direccion} onChange={handleChange} onBlur={handleBlur} className={getInputClass('direccion')} />
+              <input name="direccion" value={formData.direccion} onChange={handleChange} onBlur={handleBlur} className={getInputClass('direccion')} />
               {renderError('direccion')}
             </div>
             <div className="formGroup full-width">
               <label>Correo Electrónico *</label>
-              <input required name="email" type="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} className={getInputClass('email')} placeholder="ejemplo@correo.com" />
+              <input name="email" type="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} className={getInputClass('email')} placeholder="ejemplo@correo.com" />
               {renderError('email')}
             </div>
             <div className="formGroup full-width">
               <label>Rol Asignado *</label>
-              <select required name="rol" value={formData.rol} onChange={handleChange} onBlur={handleBlur} className={getSelectClass('rol')} disabled={isEditing}>
-                <option value="" disabled>Seleccione un rol...</option>
+              <select name="rol" value={formData.rol} onChange={handleChange} onBlur={handleBlur} className={getSelectClass('rol')} disabled={isEditing}>
+                <option value="" disabled>Seleccioná un rol…</option>
                 <option value="super_admin">Super Administrador</option>
                 <option value="alumno">Alumno</option>
                 <option value="profesor">Profesor</option>
@@ -387,109 +349,171 @@ export function PersonaForm({ persona, onClose }) {
             </div>
           </div>
 
-          {/* Campos específicos según el rol (HU10) */}
+          {/* ── ALUMNO ── */}
           {formData.rol === 'alumno' && (
             <>
-              <h3 className="sectionTitle">Datos Académicos (Alumno)</h3>
+              <h3 className="sectionTitle">Datos Académicos</h3>
               <div className="formGrid">
                 <div className="formGroup full-width">
                   <label>Colegio</label>
                   <input name="colegio" value={formData.colegio} onChange={handleChange} onBlur={handleBlur} className={getInputClass('colegio')} />
-                  {renderError('colegio')}
                 </div>
                 <div className="formGroup">
                   <label>Grado / Curso</label>
                   <input name="gradoCurso" value={formData.gradoCurso} onChange={handleChange} onBlur={handleBlur} className={getInputClass('gradoCurso')} />
-                  {renderError('gradoCurso')}
                 </div>
                 <div className="formGroup">
                   <label>Nivel Educativo</label>
                   <select name="nivelEducativo" value={formData.nivelEducativo} onChange={handleChange} onBlur={handleBlur} className={getSelectClass('nivelEducativo')}>
-                    <option value="">Seleccionar...</option>
+                    <option value="">Seleccionar…</option>
                     <option value="primario">Primario</option>
                     <option value="secundario">Secundario</option>
                     <option value="terciario">Terciario</option>
                     <option value="universitario">Universitario</option>
                   </select>
-                  {renderError('nivelEducativo')}
                 </div>
               </div>
             </>
           )}
 
+          {/* ── PROFESOR ── */}
           {formData.rol === 'profesor' && (
             <>
-              <h3 className="sectionTitle">Datos Profesionales (Profesor)</h3>
+              <h3 className="sectionTitle">Datos Profesionales</h3>
               <div className="formGrid">
-                <div className="formGroup full-width">
-                  <label>Especialidades</label>
-                  <input name="especialidades" value={formData.especialidades} onChange={handleChange} onBlur={handleBlur} className={getInputClass('especialidades')} placeholder="Ej: Matemáticas, Física" />
-                  {renderError('especialidades')}
-                </div>
                 <div className="formGroup">
                   <label>Título</label>
                   <select name="titulo" value={formData.titulo} onChange={handleChange} onBlur={handleBlur} className={getSelectClass('titulo')}>
-                    <option value="">Seleccionar...</option>
+                    <option value="">Seleccionar…</option>
                     <option value="profesorado">Profesorado</option>
                     <option value="licenciatura">Licenciatura</option>
                     <option value="tecnicatura">Tecnicatura</option>
                     <option value="doctorado">Doctorado</option>
                     <option value="otro">Otro</option>
                   </select>
-                  {renderError('titulo')}
                 </div>
                 {formData.titulo === 'otro' && (
                   <div className="formGroup">
-                    <label>Especifique Título *</label>
-                    <input required name="otroTitulo" value={formData.otroTitulo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('otroTitulo')} placeholder="Ej: Maestro de Música" />
+                    <label>Especificar Título *</label>
+                    <input name="otroTitulo" value={formData.otroTitulo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('otroTitulo')} placeholder="Ej: Maestro de Música" />
                     {renderError('otroTitulo')}
                   </div>
                 )}
                 <div className="formGroup">
                   <label>Fecha de Ingreso</label>
                   <input type="date" name="fechaIngreso" value={formData.fechaIngreso} onChange={handleChange} onBlur={handleBlur} className={getInputClass('fechaIngreso')} />
-                  {renderError('fechaIngreso')}
                 </div>
-                <div className="formGroup">
-                  <label>Cantidad de Horas</label>
-                  <input type="number" min="0" step="0.5" name="cantidadHoras" value={formData.cantidadHoras} onChange={handleChange} onBlur={handleBlur} className={getInputClass('cantidadHoras')} placeholder="Ej: 20" />
-                  {renderError('cantidadHoras')}
+              </div>
+
+              {/* ── GRILLA DE MATERIAS ── */}
+              <div className="materiasSection">
+                <div className="materiasSectionHeader">
+                  <h3 className="sectionTitle" style={{ margin: 0, borderBottom: 'none' }}>
+                    Materias Asignadas
+                  </h3>
+                  <span className="materiasSectionHint">Valor/hora, cantidad de alumnos y horas por materia</span>
                 </div>
-                <div className="formGroup">
-                  <label>Valor Clase por Hora ($)</label>
-                  <input type="number" min="0" step="0.01" name="valorClasePorHora" value={formData.valorClasePorHora} onChange={handleChange} onBlur={handleBlur} className={getInputClass('valorClasePorHora')} placeholder="Ej: 1500" />
-                  {renderError('valorClasePorHora')}
-                </div>
-                <div className="formGroup">
-                  <label>Valor Curso Completo ($)</label>
-                  <input type="number" min="0" step="0.01" name="valorCursoCompleto" value={formData.valorCursoCompleto} onChange={handleChange} onBlur={handleBlur} className={getInputClass('valorCursoCompleto')} placeholder="Ej: 15000" />
-                  {renderError('valorCursoCompleto')}
-                </div>
-                <div className="formGroup">
-                  <label>Mín. Alumnos Grupo (Cant.)</label>
-                  <input type="number" min="1" name="minimoAlumnosGrupo" value={formData.minimoAlumnosGrupo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('minimoAlumnosGrupo')} placeholder="Ej: 3" />
-                  {renderError('minimoAlumnosGrupo')}
-                </div>
-                <div className="formGroup">
-                  <label>Descuento Grupo (%)</label>
-                  <input type="number" min="0" max="100" name="porcentajeDescuentoGrupo" value={formData.porcentajeDescuentoGrupo} onChange={handleChange} onBlur={handleBlur} className={getInputClass('porcentajeDescuentoGrupo')} placeholder="Ej: 10" />
-                  {renderError('porcentajeDescuentoGrupo')}
-                </div>
+
+                {loadingMaterias ? (
+                  <div className="materiasLoading">Cargando materias…</div>
+                ) : (
+                  <div className="materiasTableWrap">
+                    <table className="materiasTable">
+                      <thead>
+                        <tr>
+                          <th>Materia</th>
+                          <th>Valor / hora ($)</th>
+                          <th>Cant. alumnos</th>
+                          <th>Cant. horas</th>
+                          <th className="col-remove"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {materias.map((row, i) => (
+                          <tr key={row._key}>
+                            <td>
+                              <select
+                                className="select-field select-materia"
+                                value={row.materiaId}
+                                onChange={e => handleMateriaChange(i, 'materiaId', e.target.value)}
+                              >
+                                <option value="">Seleccionar…</option>
+                                {materiasDisponibles.map(m => (
+                                  <option key={m.id} value={String(m.id)}>
+                                    {m.nombre}{m.area ? ` — ${m.area}` : ''}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td>
+                              <input
+                                type="number" min="0" step="0.01"
+                                className="input-field input-materia"
+                                value={row.valorHora}
+                                placeholder="0.00"
+                                onChange={e => handleMateriaChange(i, 'valorHora', e.target.value)}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number" min="1" step="1"
+                                className="input-field input-materia"
+                                value={row.cantAlumnos}
+                                placeholder="0"
+                                onChange={e => handleMateriaChange(i, 'cantAlumnos', e.target.value)}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number" min="0" step="0.5"
+                                className="input-field input-materia"
+                                value={row.cantHoras}
+                                placeholder="0"
+                                onChange={e => handleMateriaChange(i, 'cantHoras', e.target.value)}
+                              />
+                            </td>
+                            <td className="col-remove">
+                              <button
+                                type="button"
+                                className="btn-remove-materia"
+                                onClick={() => removeMateria(i)}
+                                title="Quitar materia"
+                                aria-label="Quitar materia"
+                              >
+                                ×
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {materiasError && <div className="emsg" style={{ marginTop: 6 }}>{materiasError}</div>}
+
+                <button type="button" className="btn-add-materia" onClick={addMateria}>
+                  + Agregar materia
+                </button>
               </div>
             </>
           )}
 
+          {/* ── ADMINISTRATIVO ── */}
           {formData.rol === 'administrativo' && (
             <>
-              <h3 className="sectionTitle">Datos Laborales (Administrativo)</h3>
+              <h3 className="sectionTitle">Datos Laborales</h3>
               <div className="formGrid">
                 <div className="formGroup full-width">
                   <label>Tipo de Administrativo *</label>
-                  <input required name="tipoColaborador" value={formData.tipoColaborador} onChange={handleChange} onBlur={handleBlur} className={getInputClass('tipoColaborador')} placeholder="Ej: Secretaría, Mantenimiento" />
+                  <input name="tipoColaborador" value={formData.tipoColaborador} onChange={handleChange} onBlur={handleBlur} className={getInputClass('tipoColaborador')} placeholder="Ej: Secretaría, Mantenimiento" />
                   {renderError('tipoColaborador')}
                 </div>
                 <div className="formGroup">
-                  <label>Fecha Contratación <span style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--muted-2)', marginLeft: '4px' }}>(Mínimo: 01/01/2025)</span></label>
+                  <label>
+                    Fecha Contratación
+                    <span className="labelHint">(Mín: 01/01/2025)</span>
+                  </label>
                   <input type="date" name="fechaContratacion" min="2025-01-01" value={formData.fechaContratacion} onChange={handleChange} onBlur={handleBlur} className={getInputClass('fechaContratacion')} />
                   {renderError('fechaContratacion')}
                 </div>
@@ -504,7 +528,9 @@ export function PersonaForm({ persona, onClose }) {
 
           <div className="formActions">
             <button type="button" className="btn outline" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn primary">{isEditing ? 'Guardar Cambios' : 'Registrar Persona'}</button>
+            <button type="submit" className="btn primary">
+              {isEditing ? 'Guardar Cambios' : 'Registrar Persona'}
+            </button>
           </div>
         </form>
       </div>

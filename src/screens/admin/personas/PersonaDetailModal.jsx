@@ -134,53 +134,62 @@ export function PersonaDetailModal({ persona, onClose }) {
 
           {esProfesor && (
             <div className="detail-section highlight-sec">
-              <h3 className="detail-section-title">Datos Profesionales & Tarifas (Profesor)</h3>
+              <h3 className="detail-section-title">Datos Profesionales (Profesor)</h3>
               <div className="detail-grid">
-                <div className="detail-item full-width">
-                  <span className="detail-label">Especialidades</span>
-                  <span className="detail-value">{persona.especialidades || persona.Especialidades || '—'}</span>
-                </div>
                 <div className="detail-item">
                   <span className="detail-label">Título</span>
-                  <span className="detail-value">{persona.titulo || persona.Titulo || '—'}</span>
+                  <span className="detail-value capitalize">{persona.titulo || persona.Titulo || '—'}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Fecha de Ingreso</span>
                   <span className="detail-value">{formatFechaSimple(persona.fechaIngresoDocente || persona.FechaIngresoDocente)}</span>
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">Horas Semanales</span>
-                  <span className="detail-value">{persona.cantidadHoras ?? persona.CantidadHoras ?? '—'} hs</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Valor Clase por Hora</span>
-                  <span className="detail-value highlight-val">
-                    {(persona.valorClasePorHora ?? persona.ValorClasePorHora) !== undefined 
-                      ? `$${Number(persona.valorClasePorHora ?? persona.ValorClasePorHora).toLocaleString('es-AR', { minimumFractionDigits: 2 })}` 
-                      : '—'}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Valor Curso Completo</span>
-                  <span className="detail-value highlight-val">
-                    {(persona.valorCursoCompleto ?? persona.ValorCursoCompleto) !== undefined 
-                      ? `$${Number(persona.valorCursoCompleto ?? persona.ValorCursoCompleto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}` 
-                      : '—'}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Mínimo Alumnos para Grupo</span>
-                  <span className="detail-value">{persona.minimoAlumnosGrupo ?? persona.MinimoAlumnosGrupo ?? '—'} alumnos</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Descuento Grupo</span>
-                  <span className="detail-value percent-val">
-                    {(persona.porcentajeDescuentoGrupo ?? persona.PorcentajeDescuentoGrupo) !== undefined 
-                      ? `${Number(persona.porcentajeDescuentoGrupo ?? persona.PorcentajeDescuentoGrupo)}%` 
-                      : '—'}
-                  </span>
-                </div>
               </div>
+
+              {/* Materias asignadas */}
+              {(() => {
+                const pm = persona.profesoresMaterias || persona.ProfesoresMaterias || [];
+                if (pm.length === 0) return (
+                  <div style={{ marginTop: 12, fontSize: 13, color: 'var(--muted-2)', fontStyle: 'italic' }}>
+                    Sin materias asignadas.
+                  </div>
+                );
+                return (
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.3px', color: 'var(--muted-2)', marginBottom: 8 }}>
+                      Materias asignadas
+                    </div>
+                    <div className="materiasTableWrap">
+                      <table className="materiasTable">
+                        <thead>
+                          <tr>
+                            <th>Materia</th>
+                            <th>Valor / hora</th>
+                            <th>Cant. alumnos</th>
+                            <th>Cant. horas</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pm.map((m, i) => {
+                            const nombreMateria = m.materia?.nombre || m.Materia?.Nombre || m.materia?.Nombre || `#${m.materiaId || m.MateriaId}`;
+                            const valorHora = m.valorHora ?? m.ValorHora;
+                            const cantAlumnos = m.cantAlumnos ?? m.CantAlumnos;
+                            const cantHoras = m.cantHoras ?? m.CantHoras;
+                            return (
+                              <tr key={i}>
+                                <td style={{ fontWeight: 600 }}>{nombreMateria}</td>
+                                <td>{valorHora != null ? `$${Number(valorHora).toLocaleString('es-AR', { minimumFractionDigits: 2 })}` : '—'}</td>
+                                <td>{cantAlumnos != null ? cantAlumnos : '—'}</td>
+                                <td>{cantHoras != null ? `${cantHoras} hs` : '—'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
