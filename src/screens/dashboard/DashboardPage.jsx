@@ -75,6 +75,9 @@ export function DashboardPage({ title }) {
         <Link className="dashCardLink" to="/dashboard/alumnos">
           Ir a alumnos
         </Link>
+        <Link className="dashCardLink" to="/dashboard/inscripciones">
+          Ir a inscripciones
+        </Link>
       </div>
 
       {!session ? (
