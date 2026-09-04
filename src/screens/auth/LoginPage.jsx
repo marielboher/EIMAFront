@@ -14,6 +14,7 @@ const DASHBOARD_SUPER_ADMIN_PATHS = new Set([
   '/dashboard/profesores',
   '/dashboard/colaboradores',
   '/dashboard/materias',
+  '/dashboard/inscripciones',
 ])
 
 /** Rutas que el backend pudo sugerir antes de unificar el SPA en <c>/dashboard</c>. */
