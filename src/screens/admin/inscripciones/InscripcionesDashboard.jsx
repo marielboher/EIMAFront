@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { InscripcionForm } from './InscripcionForm'
 import { InscripcionDetailModal } from './InscripcionDetailModal'
 import {
-  listInscripcionesMock,
-  getInscripcionMockById,
-  darDeBajaInscripcionMock,
-  MATERIAS_MOCK,
-  textoAdvertenciaBaja,
-} from './inscripcionesMock'
+  getInscripciones,
+  getInscripcionById,
+  darDeBajaInscripcion,
+  mensajeErrorApi,
+} from '../../../services/inscripciones'
+import { getMaterias } from '../../../services/materias'
 import { confirmDialog, toastSuccess, toastError } from '../../../lib/alerts'
 import {
   ESTADOS_INSCRIPCION,
@@ -18,12 +18,14 @@ import {
   nombreMateria,
   puedeDarDeBaja,
   inscripcionYaInactiva,
+  textoAdvertenciaBaja,
 } from './inscripcionHelpers'
 import '../personas/personas.css'
 import './inscripciones.css'
 
 export function InscripcionesDashboard() {
   const [inscripciones, setInscripciones] = useState([])
+  const [materias, setMaterias] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterEstado, setFilterEstado] = useState('Activa')
@@ -37,35 +39,57 @@ export function InscripcionesDashboard() {
   const [totalRegistros, setTotalRegistros] = useState(0)
 
   useEffect(() => {
+    const ac = new AbortController()
+    getMaterias({ signal: ac.signal })
+      .then((list) => setMaterias(Array.isArray(list) ? list : []))
+      .catch(() => setMaterias([]))
+    return () => ac.abort()
+  }, [])
+
+  useEffect(() => {
     const t = setTimeout(() => {
       fetchData({ pagina: 1, buscar: search, estado: filterEstado, materiaId: filterMateria })
     }, 350)
     return () => clearTimeout(t)
   }, [search, filterEstado, filterMateria])
 
-  const fetchData = (options = {}) => {
+  const fetchData = async (options = {}) => {
     setLoading(true)
     const estado = options.estado !== undefined ? options.estado : filterEstado
     const buscar = options.buscar !== undefined ? options.buscar : search
     const materiaId = options.materiaId !== undefined ? options.materiaId : filterMateria
     const pagina = options.pagina !== undefined ? options.pagina : paginaActual
-    const res = listInscripcionesMock({
-      estado,
-      buscar,
-      materiaId,
-      pagina,
-      limite: 5,
-    })
-    setInscripciones(res.datos || [])
-    setPaginaActual(res.paginaActual || 1)
-    setPaginasTotales(res.paginasTotales || 1)
-    setTotalRegistros(res.totalRegistros || 0)
-    setLoading(false)
+    try {
+      const res = await getInscripciones({
+        estado,
+        buscar,
+        materiaId,
+        pagina,
+        limite: 5,
+      })
+      setInscripciones(res.datos || [])
+      setPaginaActual(res.paginaActual || 1)
+      setPaginasTotales(res.paginasTotales || 1)
+      setTotalRegistros(res.totalRegistros || 0)
+    } catch (error) {
+      console.error(error)
+      setInscripciones([])
+      toastError({ title: 'Error', text: mensajeErrorApi(error, 'No se pudieron cargar las inscripciones.') })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const abrirDetalle = (row) => {
-    const full = getInscripcionMockById(row.id) || row
-    setDetalle(full)
+  const abrirDetalle = async (row) => {
+    try {
+      const full = await getInscripcionById(row.id)
+      setDetalle(full)
+    } catch (error) {
+      toastError({
+        title: 'No se pudo abrir el detalle',
+        text: mensajeErrorApi(error, 'La inscripción no existe o no está disponible.'),
+      })
+    }
   }
 
   const handleRowClick = (e, row) => {
@@ -74,9 +98,14 @@ export function InscripcionesDashboard() {
   }
 
   const handleDarDeBaja = async (row) => {
-    const actual = getInscripcionMockById(row.id) || row
-    const estado = actual.estado
+    let actual = row
+    try {
+      actual = await getInscripcionById(row.id)
+    } catch {
+      actual = row
+    }
 
+    const estado = actual.estado
     if (inscripcionYaInactiva(estado)) {
       toastError({
         title: 'Inscripción inactiva',
@@ -105,12 +134,16 @@ export function InscripcionesDashboard() {
     if (!confirmado) return
 
     try {
-      const actualizada = darDeBajaInscripcionMock(actual.id)
+      const res = await darDeBajaInscripcion(actual.id)
+      const actualizada = res.inscripcion || res
       toastSuccess({ text: 'La inscripción quedó Cancelada (baja lógica).' })
       fetchData({ pagina: paginaActual })
       setDetalle((prev) => (prev && prev.id === actualizada.id ? actualizada : prev))
     } catch (error) {
-      toastError({ title: 'No se pudo dar de baja', text: error.message || 'La inscripción ya se encuentra inactiva.' })
+      toastError({
+        title: 'No se pudo dar de baja',
+        text: mensajeErrorApi(error, 'La inscripción ya se encuentra inactiva.'),
+      })
     }
   }
 
@@ -133,7 +166,7 @@ export function InscripcionesDashboard() {
         <div className="panelHeader">
           <div>
             <div className="panelTitle">Inscripciones</div>
-            <div className="panelSub">Consulta y gestión de cursadas de alumnos (datos de prueba)</div>
+            <div className="panelSub">Consulta y gestión de cursadas de alumnos</div>
           </div>
           <button
             className="btn primary"
@@ -161,9 +194,9 @@ export function InscripcionesDashboard() {
           </select>
           <select className="select-field" value={filterMateria} onChange={(e) => setFilterMateria(e.target.value)}>
             <option value="todos">Todas las materias</option>
-            {MATERIAS_MOCK.map((m) => (
-              <option key={m.id} value={String(m.id)}>
-                {m.nombre}
+            {materias.map((m) => (
+              <option key={m.id || m.Id} value={String(m.id || m.Id)}>
+                {m.nombre || m.Nombre}
               </option>
             ))}
           </select>
@@ -228,6 +261,7 @@ export function InscripcionesDashboard() {
                           <button
                             className={`btn-icon ${bajaHabilitada ? 'danger' : ''}`}
                             title={bajaHabilitada ? 'Dar de baja' : 'Dar de baja (no disponible)'}
+                            disabled={!bajaHabilitada}
                             onClick={() => handleDarDeBaja(row)}
                           >
                             🚫
@@ -270,7 +304,6 @@ export function InscripcionesDashboard() {
           inscripcion={detalle}
           onClose={() => setDetalle(null)}
           onPagoRegistrado={(actualizada) => {
-            // CA05 — detalle e historial actualizados + monto en listado
             setDetalle(actualizada)
             fetchData({ pagina: paginaActual })
           }}

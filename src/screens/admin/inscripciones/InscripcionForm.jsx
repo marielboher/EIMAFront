@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toastError, toastSuccess } from '../../../lib/alerts'
+import { createInscripcion, updateInscripcion, mensajeErrorApi } from '../../../services/inscripciones'
+import { getPersonas } from '../../../services/personas'
+import { getMaterias } from '../../../services/materias'
 import { ESTADOS_INSCRIPCION, nombreAlumno, nombreMateria } from './inscripcionHelpers'
-import { ALUMNOS_MOCK, MATERIAS_MOCK, createInscripcionMock, updateInscripcionMock } from './inscripcionesMock'
 import '../personas/personas.css'
 import './inscripciones.css'
 
@@ -28,8 +30,10 @@ function validateField(name, value) {
 export function InscripcionForm({ inscripcion, onClose }) {
   const isEditing = !!inscripcion
 
-  const alumnos = ALUMNOS_MOCK.filter((a) => a.activo)
-  const materias = MATERIAS_MOCK.filter((m) => m.activa)
+  const [alumnos, setAlumnos] = useState([])
+  const [materias, setMaterias] = useState([])
+  const [cargandoCombos, setCargandoCombos] = useState(!isEditing)
+  const [enviando, setEnviando] = useState(false)
   const [touched, setTouched] = useState({})
   const [formData, setFormData] = useState({
     personaId: String(inscripcion?.personaId || inscripcion?.PersonaId || ''),
@@ -38,6 +42,29 @@ export function InscripcionForm({ inscripcion, onClose }) {
     clasesTomadas: String(inscripcion?.clasesTomadas ?? inscripcion?.ClasesTomadas ?? '0'),
     estado: inscripcion?.estado || inscripcion?.Estado || 'Activa',
   })
+
+  useEffect(() => {
+    if (isEditing) return undefined
+    const ac = new AbortController()
+    setCargandoCombos(true)
+    Promise.all([
+      getPersonas({ signal: ac.signal, rol: 'alumno', estado: 'activo', pagina: 1, limite: 200 }),
+      getMaterias({ signal: ac.signal }),
+    ])
+      .then(([personasRes, materiasRes]) => {
+        const listaAlumnos = (personasRes?.datos || []).filter((a) => (a.activo ?? a.Activo) !== false)
+        const listaMaterias = (Array.isArray(materiasRes) ? materiasRes : [])
+          .filter((m) => (m.activa ?? m.Activa) !== false)
+        setAlumnos(listaAlumnos)
+        setMaterias(listaMaterias)
+      })
+      .catch((error) => {
+        if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') return
+        toastError({ title: 'Error', text: mensajeErrorApi(error, 'No se pudieron cargar alumnos o materias.') })
+      })
+      .finally(() => setCargandoCombos(false))
+    return () => ac.abort()
+  }, [isEditing])
 
   const handleBlur = (e) => setTouched((prev) => ({ ...prev, [e.target.name]: true }))
 
@@ -82,15 +109,19 @@ export function InscripcionForm({ inscripcion, onClose }) {
     if (isEditing) {
       const tomadas = Number(formData.clasesTomadas)
       const totales = Number(formData.clasesTotales)
-      if (tomadas > totales) {
-        toastError({ title: 'Validación', text: 'Las clases tomadas no pueden superar las contratadas.' })
+      if (totales < tomadas) {
+        toastError({
+          title: 'Validación',
+          text: `Las clases totales no pueden ser menores a las ya tomadas (${tomadas}).`,
+        })
         return
       }
     }
 
+    setEnviando(true)
     try {
       if (isEditing) {
-        updateInscripcionMock(inscripcion.id, {
+        await updateInscripcion(inscripcion.id, {
           clasesTotales: Number(formData.clasesTotales),
           clasesTomadas: Number(formData.clasesTomadas),
           estado: formData.estado,
@@ -98,7 +129,7 @@ export function InscripcionForm({ inscripcion, onClose }) {
         toastSuccess({ text: 'Inscripción actualizada.' })
         onClose(true)
       } else {
-        createInscripcionMock({
+        await createInscripcion({
           personaId: Number(formData.personaId),
           materiaId: Number(formData.materiaId),
           clasesTotales: Number(formData.clasesTotales),
@@ -109,8 +140,10 @@ export function InscripcionForm({ inscripcion, onClose }) {
     } catch (error) {
       toastError({
         title: isEditing ? 'Error al guardar' : 'Error en el alta',
-        text: error.message || 'No se pudo guardar la inscripción.',
+        text: mensajeErrorApi(error, 'No se pudo guardar la inscripción.'),
       })
+    } finally {
+      setEnviando(false)
     }
   }
 
@@ -146,8 +179,11 @@ export function InscripcionForm({ inscripcion, onClose }) {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     className={getSelectClass('personaId')}
+                    disabled={cargandoCombos}
                   >
-                    <option value="">Seleccioná un alumno activo…</option>
+                    <option value="">
+                      {cargandoCombos ? 'Cargando alumnos…' : 'Seleccioná un alumno activo…'}
+                    </option>
                     {alumnos.map((a) => (
                       <option key={a.id || a.Id} value={String(a.id || a.Id)}>
                         {(a.apellido || a.Apellido || '')}, {(a.nombre || a.Nombre || '')} · DNI {a.dni || a.Dni}
@@ -171,8 +207,11 @@ export function InscripcionForm({ inscripcion, onClose }) {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     className={getSelectClass('materiaId')}
+                    disabled={cargandoCombos}
                   >
-                    <option value="">Seleccioná una materia activa…</option>
+                    <option value="">
+                      {cargandoCombos ? 'Cargando materias…' : 'Seleccioná una materia activa…'}
+                    </option>
                     {materias.map((m) => (
                       <option key={m.id || m.Id} value={String(m.id || m.Id)}>
                         {m.nombre || m.Nombre}{m.area || m.Area ? ` — ${m.area || m.Area}` : ''}
@@ -239,9 +278,15 @@ export function InscripcionForm({ inscripcion, onClose }) {
           )}
 
           <div className="formActions">
-            <button type="button" className="btn outline" onClick={() => onClose(false)}>Cancelar</button>
-            <button type="submit" className="btn primary">
-              {isEditing ? 'Guardar cambios' : 'Registrar inscripción'}
+            <button type="button" className="btn outline" onClick={() => onClose(false)} disabled={enviando}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn primary" disabled={enviando || (!isEditing && cargandoCombos)}>
+              {enviando
+                ? 'Guardando…'
+                : isEditing
+                  ? 'Guardar cambios'
+                  : 'Registrar inscripción'}
             </button>
           </div>
         </form>

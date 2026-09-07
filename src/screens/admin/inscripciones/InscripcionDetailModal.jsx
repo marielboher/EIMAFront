@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { registrarPagoMock } from './inscripcionesMock'
+import { registrarPagoInscripcion, mensajeErrorApi } from '../../../services/inscripciones'
 import { toastError, toastSuccess } from '../../../lib/alerts'
 import {
+  ESTADOS_PAGO,
   claseBadgeEstado,
   formatFecha,
   formatMonto,
   nombreAlumno,
   nombreMateria,
   puedeDarDeBaja,
+  urlComprobante,
 } from './inscripcionHelpers'
 import '../personas/personas.css'
 import './inscripciones.css'
@@ -38,8 +40,8 @@ const FORM_VACIO = {
   monto: '',
   metodoPago: '',
   fechaPago: hoyISO(),
-  estado: 'Confirmado',
-  comprobante: '',
+  estado: 'Pendiente',
+  comprobanteFile: null,
 }
 
 export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado, onDarDeBaja }) {
@@ -66,6 +68,11 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
     setTouched((prev) => ({ ...prev, [name]: true }))
   }
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0] || null
+    setForm((prev) => ({ ...prev, comprobanteFile: file }))
+  }
+
   const getInputClass = (name) => {
     const err = validatePagoField(name, form[name])
     if (!touched[name] && !form[name]) return 'input-field'
@@ -83,7 +90,7 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
     return touched[name] && err ? <div className="emsg">{err}</div> : null
   }
 
-  const handlePago = (e) => {
+  const handlePago = async (e) => {
     e.preventDefault()
     const campos = ['monto', 'metodoPago', 'fechaPago']
     setTouched((prev) => ({ ...prev, ...Object.fromEntries(campos.map((k) => [k, true])) }))
@@ -98,43 +105,47 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
 
     setEnviando(true)
     try {
-      // CA03 — asociado a InscripcionMateriaId y PersonaId (lo resuelve el mock)
-      const actualizada = registrarPagoMock(inscripcion.id, {
+      const actualizada = await registrarPagoInscripcion(inscripcion.id, {
         monto: Number(form.monto),
         metodoPago: form.metodoPago,
         fechaPago: form.fechaPago,
-        estado: form.estado || 'Confirmado',
-        comprobante: form.comprobante.trim() || null,
+        estado: form.estado || 'Pendiente',
+        comprobante: form.comprobanteFile || undefined,
       })
       toastSuccess({
         text: form.estado === 'Confirmado'
           ? 'Pago confirmado. Se actualizó el monto pagado de la inscripción.'
-          : 'Pago registrado. El monto pagado no se incrementa hasta confirmarlo.',
+          : 'Pago registrado como Pendiente. El monto pagado no se incrementa hasta confirmarlo.',
       })
       setForm({ ...FORM_VACIO, fechaPago: hoyISO() })
       setTouched({})
-      // CA05 — recarga detalle + historial
       onPagoRegistrado?.(actualizada)
     } catch (error) {
-      toastError({ title: 'Error', text: error.message || 'No se pudo registrar el pago.' })
+      toastError({ title: 'Error', text: mensajeErrorApi(error, 'No se pudo registrar el pago.') })
     } finally {
       setEnviando(false)
     }
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="detail-modal-card detail-modal-card--pago" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onClose} role="presentation">
+      <div
+        className="detail-modal-card detail-modal-card--pago"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inscripcion-detalle-titulo"
+      >
         <div className="detail-header">
           <div>
             <span className="detail-rol-badge rol-alumno">Inscripción</span>
-            <h2 className="detail-name">{nombreAlumno(inscripcion)}</h2>
+            <h2 id="inscripcion-detalle-titulo" className="detail-name">{nombreAlumno(inscripcion)}</h2>
             <div className="detail-dni-sub">
               {nombreMateria(inscripcion)}
               {inscripcion.alumnoDni ? ` · DNI ${inscripcion.alumnoDni}` : ''}
             </div>
           </div>
-          <button className="detail-close-btn" onClick={onClose} aria-label="Cerrar">&times;</button>
+          <button type="button" className="detail-close-btn" onClick={onClose} aria-label="Cerrar">&times;</button>
         </div>
 
         <div className="detail-body">
@@ -160,42 +171,50 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
             </div>
           </div>
 
-          {/* CA05 — historial de pagos */}
           <div className="detail-section highlight-sec">
             <h3 className="detail-section-title">Historial de pagos</h3>
             {pagos.length === 0 ? (
-              <div className="pagoItemMeta">Todavía no hay pagos registrados.</div>
+              <div className="pagoItemMeta">Sin pagos registrados</div>
             ) : (
               <ul className="pagosList">
-                {pagos.map((p) => (
-                  <li key={p.id} className="pagoItem">
-                    <div>
-                      <div className="fw-600">{formatMonto(p.monto)}</div>
-                      <div className="pagoItemMeta">
-                        {p.metodoPago} · {formatFecha(p.fechaPago)}
-                        {p.comprobante ? ` · Comp. ${p.comprobante}` : ''}
+                {pagos.map((p) => {
+                  const href = urlComprobante(p.comprobante)
+                  return (
+                    <li key={p.id} className="pagoItem">
+                      <div>
+                        <div className="fw-600">{formatMonto(p.monto)}</div>
+                        <div className="pagoItemMeta">
+                          {p.metodoPago} · {formatFecha(p.fechaPago)}
+                          {href ? (
+                            <>
+                              {' · '}
+                              <a href={href} target="_blank" rel="noreferrer">Ver comprobante</a>
+                            </>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                    <div className={`badge ${String(p.estado).toLowerCase() === 'confirmado' ? 'activa' : 'suspendida'}`}>
-                      {p.estado}
-                    </div>
-                  </li>
-                ))}
+                      <div className={`badge ${String(p.estado).toLowerCase() === 'confirmado' ? 'activa' : 'suspendida'}`}>
+                        {p.estado}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </div>
 
-          {/* HU20 — prototipo en modal del detalle */}
           <div className="detail-section">
             <h3 className="detail-section-title">Registrar pago</h3>
             <p className="inscHint">
-              El pago se asocia a esta inscripción y al alumno. Si el estado es Confirmado, se suma al monto pagado.
+              El pago se asocia a esta inscripción y al alumno. Por defecto queda Pendiente;
+              solo si está Confirmado se suma al monto pagado.
             </p>
             <form className="pagoForm" onSubmit={handlePago} noValidate>
               <div className="formGrid">
                 <div className="formGroup">
-                  <label>Monto *</label>
+                  <label htmlFor="pago-monto">Monto *</label>
                   <input
+                    id="pago-monto"
                     name="monto"
                     type="number"
                     min="0"
@@ -209,8 +228,9 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
                   {renderError('monto')}
                 </div>
                 <div className="formGroup">
-                  <label>Método de pago *</label>
+                  <label htmlFor="pago-metodo">Método de pago *</label>
                   <select
+                    id="pago-metodo"
                     name="metodoPago"
                     value={form.metodoPago}
                     onChange={handleChange}
@@ -226,8 +246,9 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
                   {renderError('metodoPago')}
                 </div>
                 <div className="formGroup">
-                  <label>Fecha de pago *</label>
+                  <label htmlFor="pago-fecha">Fecha de pago *</label>
                   <input
+                    id="pago-fecha"
                     name="fechaPago"
                     type="date"
                     value={form.fechaPago}
@@ -238,26 +259,32 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
                   {renderError('fechaPago')}
                 </div>
                 <div className="formGroup">
-                  <label>Estado del pago</label>
+                  <label htmlFor="pago-estado">Estado del pago</label>
                   <select
+                    id="pago-estado"
                     name="estado"
                     value={form.estado}
                     onChange={handleChange}
                     className="select-field"
                   >
-                    <option value="Confirmado">Confirmado</option>
-                    <option value="Pendiente">Pendiente</option>
+                    {ESTADOS_PAGO.map((e) => (
+                      <option key={e} value={e}>{e}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="formGroup full-width">
-                  <label>Comprobante</label>
+                  <label htmlFor="pago-comprobante">Comprobante (imagen)</label>
                   <input
+                    id="pago-comprobante"
                     name="comprobante"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
                     className="input-field"
-                    value={form.comprobante}
-                    onChange={handleChange}
-                    placeholder="Nº de comprobante (opcional)"
+                    onChange={handleFileChange}
                   />
+                  {form.comprobanteFile ? (
+                    <div className="pagoItemMeta">Archivo: {form.comprobanteFile.name}</div>
+                  ) : null}
                 </div>
               </div>
               <div className="formActions" style={{ marginTop: 4, paddingTop: 10, borderTop: '1px solid var(--border-2)' }}>
@@ -274,11 +301,12 @@ export function InscripcionDetailModal({ inscripcion, onClose, onPagoRegistrado,
             type="button"
             className="btn danger"
             onClick={onDarDeBaja}
+            disabled={!bajaHabilitada}
             title={bajaHabilitada ? 'Dar de baja' : 'La inscripción ya se encuentra inactiva'}
           >
             Dar de baja
           </button>
-          <button className="btn outline" onClick={onClose}>Cerrar</button>
+          <button type="button" className="btn outline" onClick={onClose}>Cerrar</button>
         </div>
       </div>
     </div>

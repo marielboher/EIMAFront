@@ -1,4 +1,7 @@
+import { env } from '../../../config/env'
+
 export const ESTADOS_INSCRIPCION = ['Activa', 'Finalizada', 'Suspendida', 'Cancelada']
+export const ESTADOS_PAGO = ['Pendiente', 'Confirmado']
 
 export function formatFecha(fechaStr) {
   if (!fechaStr) return '—'
@@ -31,8 +34,8 @@ export function nombreAlumno(row) {
 }
 
 export function nombreMateria(row) {
-  return row.materia
-    || row.materiaInfo?.nombre
+  if (typeof row.materia === 'string' && row.materia) return row.materia
+  return row.materiaInfo?.nombre
     || row.materiaInfo?.Nombre
     || row.materia?.nombre
     || row.Materia?.Nombre
@@ -56,4 +59,22 @@ export function puedeDarDeBaja(estado) {
 export function inscripcionYaInactiva(estado) {
   const e = String(estado || '').toLowerCase()
   return e === 'finalizada' || e === 'cancelada'
+}
+
+export function urlComprobante(path) {
+  if (!path) return null
+  if (/^https?:\/\//i.test(path)) return path
+  const base = String(env.apiBaseUrl || '').replace(/\/$/, '')
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`
+}
+
+export function textoAdvertenciaBaja(inscripcion) {
+  const pagos = inscripcion?.pagos || []
+  const monto = pagos
+    .filter((p) => String(p.estado || '').toLowerCase() === 'confirmado')
+    .reduce((acc, p) => acc + Number(p.monto || 0), 0)
+  const desdeDto = Number(inscripcion?.montoConfirmadoAdvertencia || 0)
+  const total = monto > 0 ? monto : desdeDto
+  if (total <= 0) return ''
+  return `Atención: hay pagos confirmados por ${formatMonto(total)}. La baja no los elimina.`
 }
