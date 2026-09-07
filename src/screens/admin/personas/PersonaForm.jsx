@@ -143,9 +143,10 @@ export function PersonaForm({ persona, onClose }) {
     const ac = new AbortController();
     abortRef.current = ac;
     setLoadingMaterias(true);
-    getMaterias({ signal: ac.signal })
+    getMaterias({ signal: ac.signal, estado: 'activa' })
       .then(data => {
-        if (!ac.signal.aborted) setMateriasDisponibles(data);
+        const list = Array.isArray(data) ? data : (data?.datos || [])
+        if (!ac.signal.aborted) setMateriasDisponibles(list.filter((m) => (m.activa ?? m.Activa) !== false))
       })
       .catch(() => {})
       .finally(() => { if (!ac.signal.aborted) setLoadingMaterias(false); });

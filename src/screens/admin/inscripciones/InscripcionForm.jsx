@@ -49,12 +49,12 @@ export function InscripcionForm({ inscripcion, onClose }) {
     setCargandoCombos(true)
     Promise.all([
       getPersonas({ signal: ac.signal, rol: 'alumno', estado: 'activo', pagina: 1, limite: 200 }),
-      getMaterias({ signal: ac.signal }),
+      getMaterias({ signal: ac.signal, estado: 'activa' }),
     ])
       .then(([personasRes, materiasRes]) => {
         const listaAlumnos = (personasRes?.datos || []).filter((a) => (a.activo ?? a.Activo) !== false)
-        const listaMaterias = (Array.isArray(materiasRes) ? materiasRes : [])
-          .filter((m) => (m.activa ?? m.Activa) !== false)
+        const rawMaterias = Array.isArray(materiasRes) ? materiasRes : (materiasRes?.datos || [])
+        const listaMaterias = rawMaterias.filter((m) => (m.activa ?? m.Activa) !== false)
         setAlumnos(listaAlumnos)
         setMaterias(listaMaterias)
       })

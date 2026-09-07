@@ -9,6 +9,10 @@
   max-width: 100%;
 }
 
+.inscripcionesWrap .tableContainer {
+  overflow: visible;
+}
+
 .inscHint {
   font-size: 12px;
   color: var(--muted-2);
@@ -59,6 +63,95 @@
 .clasesCell {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+  white-space: nowrap;
+  position: relative;
+  overflow: visible;
+}
+
+.clasesQuick {
+  position: relative;
+  display: inline-block;
+}
+
+.clasesSelect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 4.75rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.clasesSelectChevron {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.clasesSelect:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--eima-blue) 45%, var(--border));
+}
+
+.clasesSelect:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--eima-blue) 40%, transparent);
+  outline-offset: 1px;
+}
+
+.clasesSelect:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.clasesSelectMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  min-width: 100%;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.clasesSelectOption {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clasesSelectOption:hover,
+.clasesSelectOption:focus-visible {
+  background: color-mix(in srgb, var(--eima-blue) 14%, var(--surface));
+  outline: none;
+}
+
+.clasesSelectOption.is-selected {
+  background: color-mix(in srgb, var(--eima-blue) 22%, var(--surface));
+  color: var(--text-h);
 }
 
 .inscripcionesWrap .actions-col {

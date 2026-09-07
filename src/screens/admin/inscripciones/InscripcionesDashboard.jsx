@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { InscripcionForm } from './InscripcionForm'
 import { InscripcionDetailModal } from './InscripcionDetailModal'
+import { ClasesQuickSelect } from './ClasesQuickSelect'
 import {
   getInscripciones,
   getInscripcionById,
   darDeBajaInscripcion,
+  updateInscripcion,
   mensajeErrorApi,
 } from '../../../services/inscripciones'
 import { getMaterias } from '../../../services/materias'
@@ -37,11 +39,15 @@ export function InscripcionesDashboard() {
   const [paginaActual, setPaginaActual] = useState(1)
   const [paginasTotales, setPaginasTotales] = useState(1)
   const [totalRegistros, setTotalRegistros] = useState(0)
+  const [actualizandoClasesId, setActualizandoClasesId] = useState(null)
 
   useEffect(() => {
     const ac = new AbortController()
-    getMaterias({ signal: ac.signal })
-      .then((list) => setMaterias(Array.isArray(list) ? list : []))
+    getMaterias({ signal: ac.signal, estado: 'activa' })
+      .then((list) => {
+        const raw = Array.isArray(list) ? list : (list?.datos || [])
+        setMaterias(raw.filter((m) => (m.activa ?? m.Activa) !== false))
+      })
       .catch(() => setMaterias([]))
     return () => ac.abort()
   }, [])
@@ -93,8 +99,56 @@ export function InscripcionesDashboard() {
   }
 
   const handleRowClick = (e, row) => {
-    if (e.target.closest('.btn-icon') || e.target.closest('.actions-col')) return
+    if (
+      e.target.closest('.btn-icon')
+      || e.target.closest('.actions-col')
+      || e.target.closest('.clasesQuick')
+    ) return
     abrirDetalle(row)
+  }
+
+  const handleCambioClasesTomadas = async (row, valor) => {
+    const clasesTomadas = Number(valor)
+    const clasesTotales = Number(row.clasesTotales)
+    if (Number.isNaN(clasesTomadas) || clasesTomadas === Number(row.clasesTomadas)) return
+    if (clasesTomadas < 0 || clasesTomadas > clasesTotales) {
+      toastError({
+        title: 'Validación',
+        text: `Las clases tomadas deben estar entre 0 y ${clasesTotales}.`,
+      })
+      return
+    }
+
+    setActualizandoClasesId(row.id)
+    try {
+      const actualizada = await updateInscripcion(row.id, {
+        clasesTotales,
+        clasesTomadas,
+        estado: row.estado,
+      })
+      setInscripciones((prev) =>
+        prev.map((item) => (item.id === row.id
+          ? {
+              ...item,
+              clasesTomadas: actualizada.clasesTomadas ?? clasesTomadas,
+              clasesTotales: actualizada.clasesTotales ?? clasesTotales,
+              estado: actualizada.estado ?? item.estado,
+            }
+          : item)))
+      setDetalle((prev) => (prev && prev.id === row.id ? { ...prev, ...actualizada } : prev))
+      toastSuccess({
+        text: actualizada.estado === 'Finalizada' && clasesTomadas === clasesTotales
+          ? `Clases actualizadas a ${clasesTomadas}/${clasesTotales}. Estado: Finalizada.`
+          : `Clases actualizadas a ${clasesTomadas}/${clasesTotales}.`,
+      })
+    } catch (error) {
+      toastError({
+        title: 'No se pudo actualizar',
+        text: mensajeErrorApi(error, 'No se pudieron actualizar las clases tomadas.'),
+      })
+    } finally {
+      setActualizandoClasesId(null)
+    }
   }
 
   const handleDarDeBaja = async (row) => {
@@ -239,7 +293,15 @@ export function InscripcionesDashboard() {
                         </td>
                         <td>{nombreMateria(row)}</td>
                         <td>{formatFecha(row.fechaInscripcion)}</td>
-                        <td className="clasesCell">{row.clasesTomadas}/{row.clasesTotales}</td>
+                        <td className="clasesCell">
+                          <ClasesQuickSelect
+                            tomadas={row.clasesTomadas}
+                            totales={row.clasesTotales}
+                            disabled={actualizandoClasesId === row.id}
+                            label={`Clases tomadas de ${nombreAlumno(row)}`}
+                            onChange={(valor) => handleCambioClasesTomadas(row, valor)}
+                          />
+                        </td>
                         <td>
                           <span className={`badge ${claseBadgeEstado(estado)}`}>{estado}</span>
                         </td>
