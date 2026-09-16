@@ -1,136 +1,252 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toastSuccess, toastError } from '../../../lib/alerts';
+import { getMaterias, createMateria, updateMateria, toggleMateriaEstado } from '../../../services/materias';
 import './materiasDashboard.css';
 
-const DEFAULT_SPECIALTIES = [
-  'Matemática', 'Álgebra', 'Probabilidad y Estadística', 'Geometría',
-  'Historia', 'Geografía', 'Filosofía', 'Lengua', 'Literatura', 'Inglés',
-  'Biología', 'Química', 'Física'
+const AREAS_SUGERIDAS = [
+  'Ciencias exactas',
+  'Área de Ciencias Sociales',
+  'Área de Ciencias Naturales',
 ];
 
-export function MateriasDashboard() {
-  const [specialties, setSpecialties] = useState([]);
-  const [newSpecialty, setNewSpecialty] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+const emptyForm = () => ({
+  nombre: '',
+  area: '',
+  descripcion: '',
+});
 
-  // Cargar especialidades desde localStorage al iniciar
-  useEffect(() => {
-    const saved = localStorage.getItem('eima_specialties');
-    if (saved) {
-      try {
-        setSpecialties(JSON.parse(saved));
-      } catch {
-        setSpecialties(DEFAULT_SPECIALTIES);
-        localStorage.setItem('eima_specialties', JSON.stringify(DEFAULT_SPECIALTIES));
+export function MateriasDashboard() {
+  const [materias, setMaterias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [soloActivas, setSoloActivas] = useState(false);
+
+  const loadMaterias = async (signal) => {
+    setLoading(true);
+    try {
+      const data = await getMaterias({ signal });
+      if (!signal?.aborted) setMaterias(Array.isArray(data) ? data : []);
+    } catch {
+      if (!signal?.aborted) {
+        toastError({ title: 'Error', text: 'No se pudieron cargar las materias desde el servidor.' });
+        setMaterias([]);
       }
-    } else {
-      setSpecialties(DEFAULT_SPECIALTIES);
-      localStorage.setItem('eima_specialties', JSON.stringify(DEFAULT_SPECIALTIES));
+    } finally {
+      if (!signal?.aborted) setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const ac = new AbortController();
+    loadMaterias(ac.signal);
+    return () => ac.abort();
   }, []);
 
-  // Guardar en localStorage
-  const saveSpecialties = (list) => {
-    setSpecialties(list);
-    localStorage.setItem('eima_specialties', JSON.stringify(list));
+  const resetForm = () => {
+    setForm(emptyForm());
+    setEditingId(null);
   };
 
-  const handleAdd = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const cleanValue = newSpecialty.trim();
-    if (!cleanValue) {
-      toastError({ title: 'Campo Vacío', text: 'Por favor, ingrese el nombre de la especialidad.' });
+    const nombre = form.nombre.trim();
+    if (!nombre) {
+      toastError({ title: 'Campo vacío', text: 'Ingresá el nombre de la materia.' });
       return;
     }
 
-    // Validación case-insensitive
-    const exists = specialties.some(s => s.toLowerCase() === cleanValue.toLowerCase());
-    if (exists) {
-      toastError({ title: 'Especialidad Existente', text: `La especialidad "${cleanValue}" ya está registrada.` });
+    setSaving(true);
+    try {
+      const payload = {
+        nombre,
+        area: form.area.trim() || null,
+        descripcion: form.descripcion.trim() || null,
+        duracionHoras: 0,
+        precioPorClase: 0,
+        activa: true,
+      };
+
+      if (editingId != null) {
+        const actual = materias.find((m) => m.id === editingId);
+        payload.activa = actual?.activa ?? true;
+        payload.duracionHoras = actual?.duracionHoras ?? 0;
+        payload.precioPorClase = actual?.precioPorClase ?? 0;
+        await updateMateria(editingId, payload);
+        toastSuccess({ text: `Materia "${nombre}" actualizada.` });
+      } else {
+        await createMateria(payload);
+        toastSuccess({ text: `Materia "${nombre}" agregada.` });
+      }
+
+      resetForm();
+      await loadMaterias();
+    } catch (err) {
+      const msg = err?.response?.data?.mensaje || 'No se pudo guardar la materia.';
+      toastError({ title: 'Error', text: msg });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const startEdit = (m) => {
+    setEditingId(m.id);
+    setForm({
+      nombre: m.nombre || '',
+      area: m.area || '',
+      descripcion: m.descripcion || '',
+    });
+  };
+
+  const handleToggle = async (m) => {
+    const accion = m.activa ? 'desactivar' : 'reactivar';
+    if (!window.confirm(`¿${accion.charAt(0).toUpperCase() + accion.slice(1)} la materia "${m.nombre}"?`)) {
       return;
     }
-
-    const updated = [...specialties, cleanValue].sort((a, b) => a.localeCompare(b));
-    saveSpecialties(updated);
-    setNewSpecialty('');
-    toastSuccess({ text: `Especialidad "${cleanValue}" agregada correctamente.` });
-  };
-
-  const handleDelete = (specialty) => {
-    if (window.confirm(`¿Está seguro de que desea eliminar la especialidad "${specialty}" del catálogo?`)) {
-      const updated = specialties.filter(s => s !== specialty);
-      saveSpecialties(updated);
-      toastSuccess({ text: `Especialidad "${specialty}" eliminada correctamente.` });
+    try {
+      await toggleMateriaEstado(m.id);
+      toastSuccess({ text: `Materia "${m.nombre}" ${m.activa ? 'desactivada' : 'reactivada'}.` });
+      await loadMaterias();
+    } catch {
+      toastError({ title: 'Error', text: 'No se pudo cambiar el estado de la materia.' });
     }
   };
 
-  const filteredSpecialties = specialties.filter(s =>
-    s.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return materias.filter((m) => {
+      if (soloActivas && !m.activa) return false;
+      if (!q) return true;
+      return (
+        (m.nombre || '').toLowerCase().includes(q) ||
+        (m.area || '').toLowerCase().includes(q)
+      );
+    });
+  }, [materias, searchQuery, soloActivas]);
 
   return (
     <div className="materiasWrap animate-fadeIn">
       <div className="materiasPanel">
         <div className="panelHeader">
           <div>
-            <div className="panelTitle">Configuración de Especialidades (Materias)</div>
+            <div className="panelTitle">Configuración de Materias</div>
             <div className="panelSub">
-              Configure las materias y áreas de especialidad que los profesores pueden impartir en el instituto.
+              Administrá el catálogo de materias del instituto (conectado al backend).
             </div>
           </div>
         </div>
 
-        {/* Sección del Formulario para Agregar */}
         <div className="addSpecialtyCard">
-          <h3 className="sectionSubTitleTitle">Agregar Nueva Especialidad</h3>
-          <form onSubmit={handleAdd} className="addSpecialtyForm">
+          <h3 className="sectionSubTitleTitle">
+            {editingId != null ? 'Editar materia' : 'Agregar nueva materia'}
+          </h3>
+          <form onSubmit={handleSubmit} className="addSpecialtyForm materiasFormGrid">
             <input
               type="text"
-              placeholder="Ej: Programación, Inteligencia Artificial, Robótica..."
-              value={newSpecialty}
-              onChange={(e) => setNewSpecialty(e.target.value)}
+              placeholder="Nombre (ej: Programación)"
+              value={form.nombre}
+              onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
               className="input-field new-specialty-input"
+              disabled={saving}
             />
-            <button type="submit" className="btn primary">
-              Agregar Especialidad
-            </button>
+            <input
+              type="text"
+              list="areas-materias"
+              placeholder="Área (opcional)"
+              value={form.area}
+              onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
+              className="input-field new-specialty-input"
+              disabled={saving}
+            />
+            <datalist id="areas-materias">
+              {AREAS_SUGERIDAS.map((a) => (
+                <option key={a} value={a} />
+              ))}
+            </datalist>
+            <input
+              type="text"
+              placeholder="Descripción (opcional)"
+              value={form.descripcion}
+              onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
+              className="input-field new-specialty-input"
+              disabled={saving}
+            />
+            <div className="materiasFormActions">
+              <button type="submit" className="btn primary" disabled={saving}>
+                {saving ? 'Guardando…' : editingId != null ? 'Guardar cambios' : 'Agregar materia'}
+              </button>
+              {editingId != null && (
+                <button type="button" className="btn" onClick={resetForm} disabled={saving}>
+                  Cancelar
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
-        {/* Buscador e Información */}
         <div className="searchAndMetaRow">
           <input
             type="text"
-            placeholder="Buscar especialidad..."
+            placeholder="Buscar por nombre o área…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field search-specialty-input"
           />
+          <label className="materiasFilterActivas">
+            <input
+              type="checkbox"
+              checked={soloActivas}
+              onChange={(e) => setSoloActivas(e.target.checked)}
+            />
+            Solo activas
+          </label>
           <div className="metaInfo">
-            Total en catálogo: <strong>{specialties.length}</strong>
+            Total: <strong>{filtered.length}</strong>
+            {!soloActivas && materias.some((m) => !m.activa) ? (
+              <span className="metaMuted"> ({materias.filter((m) => !m.activa).length} inactivas)</span>
+            ) : null}
           </div>
         </div>
 
-        {/* Cuadrícula de Especialidades */}
         <div className="specialtiesContainer">
-          {filteredSpecialties.length > 0 ? (
+          {loading ? (
+            <div className="emptyStateSpecialties">Cargando materias…</div>
+          ) : filtered.length > 0 ? (
             <div className="specialtiesGrid">
-              {filteredSpecialties.map((specialty) => (
-                <div key={specialty} className="specialtyCard">
-                  <span className="specialtyName">{specialty}</span>
-                  <button
-                    onClick={() => handleDelete(specialty)}
-                    className="btn-icon danger deleteSpecialtyBtn"
-                    title={`Eliminar "${specialty}"`}
-                  >
-                    ×
-                  </button>
+              {filtered.map((m) => (
+                <div key={m.id} className={`specialtyCard${m.activa ? '' : ' specialtyInactive'}`}>
+                  <div className="specialtyInfo">
+                    <span className="specialtyName">{m.nombre}</span>
+                    {m.area ? <span className="specialtyArea">{m.area}</span> : null}
+                  </div>
+                  <div className="specialtyActions">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(m)}
+                      className="btn-icon editSpecialtyBtn"
+                      title={`Editar "${m.nombre}"`}
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(m)}
+                      className={`btn-icon ${m.activa ? 'danger' : 'primary'} deleteSpecialtyBtn`}
+                      title={m.activa ? `Desactivar "${m.nombre}"` : `Reactivar "${m.nombre}"`}
+                    >
+                      {m.activa ? '×' : '↺'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="emptyStateSpecialties">
-              {searchQuery ? 'No se encontraron especialidades que coincidan con la búsqueda.' : 'No hay especialidades configuradas en el sistema.'}
+              {searchQuery || soloActivas
+                ? 'No se encontraron materias que coincidan con el filtro.'
+                : 'No hay materias configuradas en el sistema.'}
             </div>
           )}
         </div>

@@ -122,6 +122,82 @@
   margin-right: 8px;
 }
 
+.specialtyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.specialtyArea {
+  font-size: 11px;
+  color: var(--muted-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.specialtyActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.specialtyInactive {
+  opacity: 0.55;
+}
+
+.specialtyInactive .specialtyName {
+  text-decoration: line-through;
+}
+
+.materiasFormGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.materiasFormActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.materiasFilterActivas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.metaMuted {
+  color: var(--muted-2);
+  font-weight: 400;
+}
+
+.editSpecialtyBtn {
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-2);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.editSpecialtyBtn:hover {
+  background: color-mix(in srgb, var(--eima-blue) 12%, transparent);
+  color: var(--eima-blue);
+}
+
 .deleteSpecialtyBtn {
   font-size: 20px;
   line-height: 1;

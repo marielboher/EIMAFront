@@ -143,7 +143,7 @@ export function PersonaForm({ persona, onClose }) {
     const ac = new AbortController();
     abortRef.current = ac;
     setLoadingMaterias(true);
-    getMaterias({ signal: ac.signal })
+    getMaterias({ signal: ac.signal, soloActivas: true })
       .then(data => {
         if (!ac.signal.aborted) setMateriasDisponibles(data);
       })
