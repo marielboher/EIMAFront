@@ -8,7 +8,7 @@ import { getPersonas } from '../../services/personas'
 const ROLES = [
   { id: 'alumno', label: 'Alumno' },
   { id: 'profesor', label: 'Profesor' },
-  { id: 'secretaria', label: 'Secretaría' },
+  { id: 'administrativo', label: 'Colaborador / Administrativo' },
   // El backend no permite asignar super_admin por esta operación.
   { id: 'super_admin', label: 'Administrador', disabled: true },
 ]
@@ -24,7 +24,7 @@ function initialsFromPersona(persona) {
 function avatarStyleForRole(rol) {
   const r = String(rol ?? '').toLowerCase()
   if (r === 'profesor') return { background: 'rgba(27, 158, 119, 0.12)', color: '#1B9E77' }
-  if (r === 'secretaria') return { background: 'rgba(244, 160, 36, 0.18)', color: '#8a5a00' }
+  if (r === 'secretaria' || r === 'administrativo') return { background: 'rgba(244, 160, 36, 0.18)', color: '#8a5a00' }
   if (r === 'super_admin') return { background: '#FDECEA', color: '#D7263D' }
   return { background: 'rgba(43, 108, 176, 0.12)', color: '#2B6CB0' } // alumno/default
 }
@@ -43,8 +43,8 @@ export function RoleManagementPage({ embedded = false } = {}) {
     async function run() {
       try {
         setLoading(true)
-        const data = await getPersonas({ signal: ac.signal })
-        setPeople(Array.isArray(data) ? data : [])
+        const res = await getPersonas({ limite: 1000, signal: ac.signal })
+        setPeople(Array.isArray(res?.datos) ? res.datos : [])
       } catch (e) {
         if (!ac.signal.aborted) {
           setInlineError(String(e?.message ?? e ?? 'No se pudo cargar la lista de usuarios.'))
@@ -134,7 +134,8 @@ export function RoleManagementPage({ embedded = false } = {}) {
 
         {filtered.map((p) => {
           const correo = String(p?.cuentaUsuario?.correoElectronico ?? '').trim()
-          const rolNombre = String(p?.rol?.nombre ?? '').toLowerCase()
+          let rolNombre = String(p?.rol?.nombre ?? '').toLowerCase()
+          if (rolNombre === 'secretaria') rolNombre = 'administrativo'
           const displayNombre = `${p?.nombre ?? ''} ${p?.apellido ?? ''}`.trim() || 'Usuario'
           const valueRol = rolNombre || 'alumno'
           return (

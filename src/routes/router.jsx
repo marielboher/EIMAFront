@@ -6,10 +6,13 @@ import { LoginPage } from '../screens/auth/LoginPage.jsx'
 import { DashboardRoot } from '../screens/dashboard/DashboardRoot.jsx'
 import { DashboardIndex, DashboardCatchAll } from '../screens/dashboard/DashboardIndex.jsx'
 import { DashboardPlaceholder } from '../screens/dashboard/DashboardPlaceholder.jsx'
+import { MateriasDashboard } from '../screens/admin/materias/MateriasDashboard.jsx'
 import { DashboardPersonasByRol } from '../screens/dashboard/DashboardPersonasByRol.jsx'
 import { RecoverPasswordPage } from '../screens/auth/RecoverPasswordPage.jsx'
 import { ResetPasswordPage } from '../screens/auth/ResetPasswordPage.jsx'
 import { RoleManagementPage } from '../screens/admin/RoleManagementPage.jsx'
+import { PersonasDashboard } from '../screens/admin/personas/PersonasDashboard.jsx'
+import { InscripcionesDashboard } from '../screens/admin/inscripciones/InscripcionesDashboard.jsx'
 import { ForbiddenPage } from '../screens/errors/ForbiddenPage.jsx'
 import { ProfilePage } from '../screens/profile/ProfilePage.jsx'
 import { RequireAuth } from './RequireAuth.jsx'
@@ -81,6 +84,14 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'personas',
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <PersonasDashboard />
+              </RequireRole>
+            ),
+          },
+          {
             path: 'alumnos',
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
@@ -97,10 +108,10 @@ export const router = createBrowserRouter([
             ),
           },
           {
-            path: 'secretaria',
+            path: 'colaboradores',
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
-                <DashboardPersonasByRol title="Secretaría" rolNombre="secretaria" />
+                <DashboardPersonasByRol title="Colaboradores" rolNombre="administrativo" />
               </RequireRole>
             ),
           },
@@ -108,10 +119,15 @@ export const router = createBrowserRouter([
             path: 'materias',
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
-                <DashboardPlaceholder
-                  title="Materias"
-                  description="Próximamente: listado y gestión de materias (ABM / correlativas / asignaciones)."
-                />
+                <MateriasDashboard />
+              </RequireRole>
+            ),
+          },
+          {
+            path: 'inscripciones',
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <InscripcionesDashboard />
               </RequireRole>
             ),
           },

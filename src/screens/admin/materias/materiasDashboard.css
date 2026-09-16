@@ -1,0 +1,13 @@
+.materiasWrap {
+  width: 100%;
+}
+
+.materiasWrap .personasPanel {
+  width: 100%;
+  max-width: 100%;
+}
+
+.materiasWrap textarea.input-field {
+  resize: vertical;
+  min-height: 72px;
+}
