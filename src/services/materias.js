@@ -2,7 +2,6 @@ import { http } from '../lib/http'
 
 /**
  * Catálogo público de materias agrupadas por área (para contacto).
- * @returns {Promise<Array<{ area: string, materias: Array<{ id: number, nombre: string }> }>>}
  */
 export async function fetchMateriasCatalogoPorArea({ signal } = {}) {
   const res = await http.get('/api/Materias/catalogo-por-area', { signal })
@@ -10,50 +9,44 @@ export async function fetchMateriasCatalogoPorArea({ signal } = {}) {
 }
 
 /**
- * Lista de materias (ABM admin / asignar a profesores).
- * @returns {Promise<Array<{ id: number, nombre: string, area: string|null, descripcion: string|null, duracionHoras: number, precioPorClase: number, activa: boolean }>>}
+ * Lista de materias. Sin pagina/limite → array plano.
+ * Con pagina/limite → { datos, paginaActual, ... }.
  */
-export async function getMaterias({ signal, soloActivas } = {}) {
-  const res = await http.get('/api/Materias', {
-    signal,
-    params: soloActivas === true ? { soloActivas: true } : undefined,
-  })
-  return Array.isArray(res.data) ? res.data : []
-}
-
-/**
- * @param {{ nombre: string, area?: string|null, descripcion?: string|null, duracionHoras?: number, precioPorClase?: number, activa?: boolean }} payload
- */
-export async function createMateria(payload) {
-  const res = await http.post('/api/Materias', {
-    nombre: payload.nombre,
-    area: payload.area ?? null,
-    descripcion: payload.descripcion ?? null,
-    duracionHoras: payload.duracionHoras ?? 0,
-    precioPorClase: payload.precioPorClase ?? 0,
-    activa: payload.activa ?? true,
-  })
+export async function getMaterias({ signal, buscar, area, estado, pagina, limite } = {}) {
+  const params = {}
+  if (buscar != null && buscar !== '') params.buscar = buscar
+  if (area != null && area !== '' && area !== 'todas') params.area = area
+  if (estado != null && estado !== '' && estado !== 'todos') params.estado = estado
+  if (pagina != null) params.pagina = pagina
+  if (limite != null) params.limite = limite
+  const res = await http.get('/api/Materias', { signal, params })
   return res.data
 }
 
-/**
- * @param {number} id
- * @param {{ nombre: string, area?: string|null, descripcion?: string|null, duracionHoras?: number, precioPorClase?: number, activa?: boolean }} payload
- */
-export async function updateMateria(id, payload) {
-  const res = await http.put(`/api/Materias/${id}`, {
-    nombre: payload.nombre,
-    area: payload.area ?? null,
-    descripcion: payload.descripcion ?? null,
-    duracionHoras: payload.duracionHoras ?? 0,
-    precioPorClase: payload.precioPorClase ?? 0,
-    activa: payload.activa ?? true,
-  })
+export async function getMateriaById(id, { signal } = {}) {
+  const res = await http.get(`/api/Materias/${id}`, { signal })
   return res.data
 }
 
-/** Baja/alta lógica (toggle Activa). */
-export async function toggleMateriaEstado(id) {
-  const res = await http.patch(`/api/Materias/${id}/cambiar-estado`)
+export async function createMateria(payload, { signal } = {}) {
+  const res = await http.post('/api/Materias', payload, { signal })
   return res.data
+}
+
+export async function updateMateria(id, payload, { signal } = {}) {
+  const res = await http.put(`/api/Materias/${id}`, payload, { signal })
+  return res.data
+}
+
+export async function toggleMateriaEstado(id, { signal } = {}) {
+  const res = await http.patch(`/api/Materias/${id}/cambiar-estado`, null, { signal })
+  return res.data
+}
+
+export function mensajeErrorMateria(error, fallback = 'Ocurrió un error inesperado.') {
+  return error?.response?.data?.mensaje
+    || error?.response?.data?.errores?.[0]?.mensaje
+    || error?.response?.data?.title
+    || error?.message
+    || fallback
 }

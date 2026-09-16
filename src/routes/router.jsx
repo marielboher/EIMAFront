@@ -12,6 +12,7 @@ import { RecoverPasswordPage } from '../screens/auth/RecoverPasswordPage.jsx'
 import { ResetPasswordPage } from '../screens/auth/ResetPasswordPage.jsx'
 import { RoleManagementPage } from '../screens/admin/RoleManagementPage.jsx'
 import { PersonasDashboard } from '../screens/admin/personas/PersonasDashboard.jsx'
+import { InscripcionesDashboard } from '../screens/admin/inscripciones/InscripcionesDashboard.jsx'
 import { ForbiddenPage } from '../screens/errors/ForbiddenPage.jsx'
 import { ProfilePage } from '../screens/profile/ProfilePage.jsx'
 import { RequireAuth } from './RequireAuth.jsx'
@@ -119,6 +120,14 @@ export const router = createBrowserRouter([
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
                 <MateriasDashboard />
+              </RequireRole>
+            ),
+          },
+          {
+            path: 'inscripciones',
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <InscripcionesDashboard />
               </RequireRole>
             ),
           },
