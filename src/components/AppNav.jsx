@@ -9,14 +9,12 @@ export function AppNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const session = getSessionInfo()
-  const rol = String(session?.rol ?? '').toLowerCase()
   const isAuthed = Boolean(session)
-  const isSuperAdmin = rol === 'super_admin'
   const accountHref = isAuthed ? '/perfil' : '/login'
   const accountActive =
     (!isAuthed && location.pathname === '/login') || (isAuthed && location.pathname === '/perfil')
+  const homeActive = location.pathname === '/' && !location.hash
   const [theme, setTheme] = useState(() => document?.documentElement?.dataset?.theme ?? getPreferredTheme())
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -35,22 +33,17 @@ export function AppNav() {
   }, [])
 
   useEffect(() => {
-    setMobileMenuOpen(false)
     setAccountMenuOpen(false)
   }, [location.pathname, location.hash])
 
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.key === 'Escape') {
-        setMobileMenuOpen(false)
-        setAccountMenuOpen(false)
-      }
+      if (e.key === 'Escape') setAccountMenuOpen(false)
     }
     function onDocClick(e) {
       const t = e.target
       if (!(t instanceof Element)) return
-      if (t.closest('.appNavMenu') || t.closest('.appNavAccount')) return
-      setMobileMenuOpen(false)
+      if (t.closest('.appNavAccount')) return
       setAccountMenuOpen(false)
     }
     document.addEventListener('keydown', onKeyDown)
@@ -91,37 +84,21 @@ export function AppNav() {
         </Link>
 
         <nav className="appNavLinks" aria-label="Principal">
-          <div className="appNavMenu">
-            <button
-              type="button"
-              className="appNavMenuBtn"
-              aria-label="Abrir menú"
-              aria-expanded={mobileMenuOpen ? 'true' : 'false'}
-              onClick={() => setMobileMenuOpen((v) => !v)}
-            >
-              ☰
-            </button>
-            {mobileMenuOpen ? (
-              <div className="appNavDropdown" role="menu" aria-label="Menú">
-                <Link
-                  className={location.pathname === '/' && !location.hash ? 'active' : ''}
-                  to="/"
-                  role="menuitem"
-                >
-                  Inicio
-                </Link>
-                <Link
-                  className={location.pathname === '/' && location.hash === '#contacto' ? 'active' : ''}
-                  to="/#contacto"
-                  role="menuitem"
-                >
-                  Contacto
-                </Link>
-              </div>
-            ) : null}
-          </div>
+          <Link
+            className={`appNavHomeIcon ${homeActive ? 'active' : ''}`}
+            to="/"
+            aria-label="Ir al inicio"
+            title="Inicio"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 3.2 3.5 10.2a1 1 0 0 0-.3.7V20a1 1 0 0 0 1 1h5.2a.8.8 0 0 0 .8-.8V15.5h3.6v4.7a.8.8 0 0 0 .8.8H19.8a1 1 0 0 0 1-1v-9.1a1 1 0 0 0-.3-.7L12 3.2Z"
+              />
+            </svg>
+          </Link>
 
-          <Link className={`appNavTopLink ${location.pathname === '/' && !location.hash ? 'active' : ''}`} to="/">
+          <Link className={`appNavTopLink ${homeActive ? 'active' : ''}`} to="/">
             Inicio
           </Link>
 
@@ -167,6 +144,9 @@ export function AppNav() {
                   </Link>
                   <Link to="/dashboard" role="menuitem">
                     Dashboard
+                  </Link>
+                  <Link to="/#contacto" role="menuitem" className="appNavAccountMobileOnly">
+                    Contacto
                   </Link>
                   <button type="button" className="appNavDropdownBtn" onClick={onLogout} role="menuitem">
                     Salir

@@ -67,6 +67,20 @@
   box-sizing: border-box;
 }
 
+@media (max-width: 560px) {
+  .dashSimpleHeader {
+    padding: 12px 14px;
+  }
+
+  .dashSimpleMain {
+    padding: 18px 14px 32px;
+  }
+
+  .dashWelcomeCard {
+    padding: 22px 16px 20px;
+  }
+}
+
 .dashWelcomeCard {
   text-align: left;
   background: color-mix(in srgb, var(--surface) 90%, transparent);

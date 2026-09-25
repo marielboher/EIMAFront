@@ -1,22 +1,53 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import './dashboardLayout.css'
 
 /** Contenedor del dashboard para super_admin (barra lateral + área principal). */
 export function DashboardSuperShell({ children }) {
+  const location = useLocation()
+  const [navOpen, setNavOpen] = useState(false)
+
+  useEffect(() => {
+    setNavOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setNavOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   return (
     <div className="dashShell">
-      <aside className="dashSidebar" aria-label="Secciones del panel">
-        <div className="dashSidebarBrand">
-          <div className="dashDots" aria-hidden="true">
-            <span className="d1" />
-            <span className="d2" />
-            <span className="d3" />
-            <span className="d4" />
+      <aside className={`dashSidebar${navOpen ? ' isOpen' : ''}`} aria-label="Secciones del panel">
+        <div className="dashSidebarTop">
+          <div className="dashSidebarBrand">
+            <div className="dashDots" aria-hidden="true">
+              <span className="d1" />
+              <span className="d2" />
+              <span className="d3" />
+              <span className="d4" />
+            </div>
+            <div className="dashSidebarTitle">Dashboard</div>
           </div>
-          <div className="dashSidebarTitle">Dashboard</div>
+
+          <button
+            type="button"
+            className="dashNavToggle"
+            aria-label={navOpen ? 'Cerrar menú del panel' : 'Abrir menú del panel'}
+            aria-expanded={navOpen ? 'true' : 'false'}
+            aria-controls="dash-nav-panel"
+            onClick={() => setNavOpen((v) => !v)}
+          >
+            <span className="dashNavToggleIcon" aria-hidden="true">
+              {navOpen ? '✕' : '☰'}
+            </span>
+          </button>
         </div>
 
-        <nav className="dashNav">
+        <nav id="dash-nav-panel" className={`dashNav${navOpen ? ' isOpen' : ''}`}>
           <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/personas">
             Directorio (ABM)
           </NavLink>
