@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { clearSession, getSessionInfo } from '../lib/authStorage'
 import { logoutUser } from '../services/auth'
 import { getPreferredTheme, toggleTheme } from '../lib/theme'
@@ -7,6 +7,7 @@ import './AppNav.css'
 
 export function AppNav() {
   const location = useLocation()
+  const navigate = useNavigate()
   const session = getSessionInfo()
   const rol = String(session?.rol ?? '').toLowerCase()
   const isAuthed = Boolean(session)
@@ -67,7 +68,7 @@ export function AppNav() {
       await logoutUser()
     } finally {
       clearSession()
-      window.location.href = '/login'
+      navigate('/login', { replace: true })
     }
   }
 
