@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPersona, updatePersona } from '../../../services/personas';
-import { getMaterias } from '../../../services/materias';
+import { fetchMateriasCatalogoPorArea, getMaterias, mensajeErrorMateria } from '../../../services/materias';
 import { toastSuccess, toastError } from '../../../lib/alerts';
 import './personas.css';
 
@@ -16,6 +16,52 @@ function getUIFriendlyRole(dbRol) {
 function formatDate(dateVal) {
   if (!dateVal) return '';
   try { return new Date(dateVal).toISOString().split('T')[0]; } catch { return ''; }
+}
+
+function normalizeMateriaOption(m, areaFallback = '') {
+  const id = m?.id ?? m?.Id
+  if (id == null || id === '') return null
+  return {
+    id,
+    nombre: m?.nombre || m?.Nombre || `#${id}`,
+    area: m?.area || m?.Area || areaFallback || '',
+  }
+}
+
+function flatFromCatalogo(catalogo) {
+  if (!Array.isArray(catalogo)) return []
+  const out = []
+  for (const grupo of catalogo) {
+    const area = grupo?.area || grupo?.Area || ''
+    const items = grupo?.materias || grupo?.Materias || []
+    for (const m of items) {
+      const opt = normalizeMateriaOption(m, area)
+      if (opt) out.push(opt)
+    }
+  }
+  return out
+}
+
+function isRequestCanceled(error) {
+  return error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED' || error?.name === 'AbortError'
+}
+
+async function loadMateriasParaCombo({ signal } = {}) {
+  try {
+    const data = await getMaterias({ signal, estado: 'activa' })
+    const raw = Array.isArray(data) ? data : (data?.datos || [])
+    const list = raw
+      .filter((m) => (m.activa ?? m.Activa) !== false)
+      .map((m) => normalizeMateriaOption(m))
+      .filter(Boolean)
+    if (list.length > 0) return list
+  } catch (error) {
+    if (isRequestCanceled(error)) throw error
+    // Si falla (p.ej. 401), caemos al catálogo público.
+  }
+
+  const catalogo = await fetchMateriasCatalogoPorArea({ signal })
+  return flatFromCatalogo(catalogo)
 }
 
 const standardTitles = ['profesorado', 'licenciatura', 'tecnicatura', 'doctorado'];
@@ -143,12 +189,18 @@ export function PersonaForm({ persona, onClose }) {
     const ac = new AbortController();
     abortRef.current = ac;
     setLoadingMaterias(true);
-    getMaterias({ signal: ac.signal, estado: 'activa' })
-      .then(data => {
-        const list = Array.isArray(data) ? data : (data?.datos || [])
-        if (!ac.signal.aborted) setMateriasDisponibles(list.filter((m) => (m.activa ?? m.Activa) !== false))
+    loadMateriasParaCombo({ signal: ac.signal })
+      .then((list) => {
+        if (!ac.signal.aborted) setMateriasDisponibles(list)
       })
-      .catch(() => {})
+      .catch((error) => {
+        if (isRequestCanceled(error) || ac.signal.aborted) return
+        setMateriasDisponibles([])
+        toastError({
+          title: 'Error',
+          text: mensajeErrorMateria(error, 'No se pudieron cargar las materias.'),
+        })
+      })
       .finally(() => { if (!ac.signal.aborted) setLoadingMaterias(false); });
     return () => ac.abort();
   }, [formData.rol]);
@@ -438,10 +490,14 @@ export function PersonaForm({ persona, onClose }) {
                                 value={row.materiaId}
                                 onChange={e => handleMateriaChange(i, 'materiaId', e.target.value)}
                               >
-                                <option value="">Seleccionar…</option>
+                                <option value="">
+                                  {materiasDisponibles.length === 0 && !loadingMaterias
+                                    ? 'Sin materias activas'
+                                    : 'Seleccionar…'}
+                                </option>
                                 {materiasDisponibles.map(m => (
-                                  <option key={m.id} value={String(m.id)}>
-                                    {m.nombre}{m.area ? ` — ${m.area}` : ''}
+                                  <option key={m.id ?? m.Id} value={String(m.id ?? m.Id)}>
+                                    {m.nombre || m.Nombre}{(m.area || m.Area) ? ` — ${m.area || m.Area}` : ''}
                                   </option>
                                 ))}
                               </select>
