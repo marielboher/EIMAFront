@@ -333,6 +333,7 @@ export function PersonaForm({ persona, onClose }) {
     } catch (error) {
       const msg = error.response?.data?.errores?.[0]?.mensaje
         || error.response?.data?.mensaje
+        || error.response?.data?.detalle
         || 'Ocurrió un error al procesar los datos.';
       toastError({ title: isEditing ? 'Error al Guardar' : 'Error en el Alta', text: msg });
     }
