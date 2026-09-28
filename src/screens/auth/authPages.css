@@ -117,6 +117,13 @@
   min-width: 0;
 }
 
+@media (max-width: 560px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 .field {
   margin-bottom: 12px;
 }

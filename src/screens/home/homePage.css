@@ -312,6 +312,10 @@
 
 .homeNewContact {
   padding: 32px 16px 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .homeNewContactCard {
@@ -470,5 +474,13 @@
 @media (max-width: 560px) {
   .homeNewGrid {
     grid-template-columns: 1fr;
+  }
+
+  .homeNewContact {
+    padding: 24px 14px 0;
+  }
+
+  .homeNew {
+    padding: 24px 14px 40px;
   }
 }

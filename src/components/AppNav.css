@@ -65,6 +65,38 @@
   display: none;
 }
 
+.appNavHomeIcon {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+  border: 0.5px solid transparent;
+}
+
+.appNavHomeIcon:hover {
+  text-decoration: none;
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.appNavHomeIcon.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.appNavHomeIcon.active:hover {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+}
+
+.appNavAccountMobileOnly {
+  display: none;
+}
+
 .appNavMenuBtn {
   width: 36px;
   height: 32px;
@@ -181,6 +213,11 @@
   border-color: var(--accent-border);
 }
 
+.appNavIcon.active:hover {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+}
+
 .appNavTheme {
   border: 0.5px solid var(--border);
   background: transparent;
@@ -233,9 +270,15 @@
     flex-wrap: nowrap;
   }
   .appNavMenu {
+    display: none;
+  }
+  .appNavHomeIcon {
     display: inline-flex;
   }
   .appNavTopLink {
     display: none;
+  }
+  .appNavAccountMobileOnly {
+    display: flex;
   }
 }
