@@ -9,8 +9,7 @@ const ROLES = [
   { id: 'alumno', label: 'Alumno' },
   { id: 'profesor', label: 'Profesor' },
   { id: 'administrativo', label: 'Colaborador / Administrativo' },
-  // El backend no permite asignar super_admin por esta operación.
-  { id: 'super_admin', label: 'Administrador', disabled: true },
+  { id: 'super_admin', label: 'Administrador' },
 ]
 
 function initialsFromPersona(persona) {
@@ -154,7 +153,7 @@ export function RoleManagementPage({ embedded = false } = {}) {
                 onChange={(e) => onChangeRole({ correo, rol: e.target.value })}
               >
                 {ROLES.map((r) => (
-                  <option key={r.id} value={r.id} disabled={r.disabled}>
+                  <option key={r.id} value={r.id}>
                     {r.label}
                   </option>
                 ))}
