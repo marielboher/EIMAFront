@@ -7,6 +7,9 @@ import { DashboardRoot } from '../screens/dashboard/DashboardRoot.jsx'
 import { DashboardIndex, DashboardCatchAll } from '../screens/dashboard/DashboardIndex.jsx'
 import { DashboardPlaceholder } from '../screens/dashboard/DashboardPlaceholder.jsx'
 import { MateriasDashboard } from '../screens/admin/materias/MateriasDashboard.jsx'
+import { AulasDashboard } from '../screens/admin/aulas/AulasDashboard.jsx'
+import { AsignacionesDashboard } from '../screens/admin/asignaciones/AsignacionesDashboard.jsx'
+import { InformeAsignacionesPage } from '../screens/admin/indicadores/InformeAsignacionesPage.jsx'
 import { DashboardPersonasByRol } from '../screens/dashboard/DashboardPersonasByRol.jsx'
 import { RecoverPasswordPage } from '../screens/auth/RecoverPasswordPage.jsx'
 import { ResetPasswordPage } from '../screens/auth/ResetPasswordPage.jsx'
@@ -120,6 +123,30 @@ export const router = createBrowserRouter([
             element: (
               <RequireRole role="super_admin" redirectTo="/dashboard">
                 <MateriasDashboard />
+              </RequireRole>
+            ),
+          },
+          {
+            path: 'aulas',
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <AulasDashboard />
+              </RequireRole>
+            ),
+          },
+          {
+            path: 'asignaciones',
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <AsignacionesDashboard />
+              </RequireRole>
+            ),
+          },
+          {
+            path: 'indicadores',
+            element: (
+              <RequireRole role="super_admin" redirectTo="/dashboard">
+                <InformeAsignacionesPage />
               </RequireRole>
             ),
           },

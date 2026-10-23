@@ -1,0 +1,19 @@
+.aulasWrap {
+  width: 100%;
+}
+
+.aulasWrap .personasPanel {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Estados del aula */
+.badge.activa {
+  background: rgba(74, 155, 111, 0.15);
+  color: var(--eima-green);
+}
+
+.badge.inactiva {
+  background: rgba(212, 88, 74, 0.15);
+  color: var(--eima-red);
+}

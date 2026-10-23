@@ -69,6 +69,15 @@ export function DashboardSuperShell({ children }) {
           <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/materias">
             Materias
           </NavLink>
+          <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/aulas">
+            Aulas
+          </NavLink>
+          <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/asignaciones">
+            Asignaciones de aula
+          </NavLink>
+          <NavLink className={({ isActive }) => `dashNavLink${isActive ? ' active' : ''}`} to="/dashboard/indicadores">
+            Indicadores del mes
+          </NavLink>
         </nav>
       </aside>
 
