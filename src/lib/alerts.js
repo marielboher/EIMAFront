@@ -55,3 +55,50 @@ export async function confirmDialog({ title, text, confirmText = 'Confirmar', ca
   return result.isConfirmed
 }
 
+/**
+ * Solicita un texto corto (por ejemplo, el nombre de una vista guardada).
+ * Devuelve el texto recortado o null si el usuario canceló.
+ */
+export async function inputDialog({
+  title,
+  text = '',
+  inputLabel = '',
+  inputPlaceholder = '',
+  inputValue = '',
+  confirmText = 'Guardar',
+  cancelText = 'Cancelar',
+  maxLength = 80,
+} = {}) {
+  const result = await Swal.fire({
+    title,
+    text,
+    input: 'text',
+    inputLabel,
+    inputPlaceholder,
+    inputValue,
+    showCancelButton: true,
+    confirmButtonText: confirmText,
+    cancelButtonText: cancelText,
+    reverseButtons: true,
+    focusCancel: false,
+    background: 'var(--surface)',
+    color: 'var(--text)',
+    confirmButtonColor: 'var(--eima-gold)',
+    cancelButtonColor: 'transparent',
+    inputValidator: (valor) => {
+      const limpio = String(valor ?? '').trim()
+      if (!limpio) return 'Ingresá un nombre.'
+      if (limpio.length > maxLength) return `Usá como máximo ${maxLength} caracteres.`
+      return undefined
+    },
+    customClass: {
+      popup: 'swal-popup-custom',
+      confirmButton: 'swal-btn-confirm',
+      cancelButton: 'swal-btn-cancel',
+    },
+  })
+
+  if (!result.isConfirmed) return null
+  return String(result.value ?? '').trim()
+}
+

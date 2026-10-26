@@ -1,0 +1,110 @@
+.informesWrap {
+  width: 100%;
+}
+
+.informesWrap .personasPanel {
+  width: 100%;
+  max-width: 100%;
+}
+
+.panelHeader.informesHeader {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.informesMes {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.informesMes .input-field {
+  padding: 7px 10px;
+  font-size: 13px;
+  width: auto;
+}
+
+.informesMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted-2);
+  margin: 0 0 16px;
+}
+
+.informesPeriodo {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.informesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  transition: opacity 0.2s ease;
+}
+
+.informesGrid.isRefreshing {
+  opacity: 0.55;
+}
+
+.informeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: left;
+}
+
+.informeCardTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.informeCardValue {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-h);
+}
+
+.informeCardDetail {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.informeCardDefinition {
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted-2);
+}
+
+.informeCard--sla .informeCardValue {
+  color: var(--eima-green);
+}
+
+.informeCard--tme .informeCardValue {
+  color: var(--eima-blue);
+}
+
+.informeCard--abiertas .informeCardValue {
+  color: var(--eima-gold);
+}
+
+.informesNota {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted-2);
+}
