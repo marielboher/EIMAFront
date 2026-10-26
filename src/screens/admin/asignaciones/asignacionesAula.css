@@ -210,6 +210,102 @@
   transition: width 0.25s ease;
 }
 
+.cupoDisponibles {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.cupoCell.isFull .cupoBar > span {
+  background: #b42318;
+}
+
+.cupoCell.isFull .cupoDisponibles {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.asignacion-detail-card {
+  max-width: 760px;
+}
+
+.cupoResumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.cupoResumen strong {
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+.alumnosTablaWrap {
+  overflow-x: auto;
+}
+
+.alumnosTabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.alumnosTabla th,
+.alumnosTabla td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.alumnosTabla th {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.candidatosBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.candidatosBox label {
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.candidatosLista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.candidatosLista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.cupoBloqueo {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, #b42318 12%, var(--surface));
+  color: #b42318;
+  font-weight: 650;
+  font-size: 13px;
+}
+
 /* Ayudas del formulario */
 .asigHint {
   font-size: 11.5px;

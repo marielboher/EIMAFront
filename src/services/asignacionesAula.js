@@ -94,12 +94,66 @@ export async function exportarAsignacionesAula({ formato = 'csv', ...filtros } =
   return { blob: res.data, filename: nombre }
 }
 
-/** Indicadores del mes (HU28). */
-export async function getInformeAsignacionesAula({ anio, mes, signal } = {}) {
-  const res = await http.get('/api/Informes/AsignacionesAula', {
-    signal,
-    params: { anio, mes },
+/** Indicadores del informe (HU28–HU34). */
+export async function getInformeAsignacionesAula({
+  anio,
+  mes,
+  periodo = 'mes',
+  materiaId,
+  comparar = false,
+  signal,
+} = {}) {
+  const params = { anio, mes, periodo, comparar }
+  if (materiaId) params.materiaId = materiaId
+  const res = await http.get('/api/Informes/AsignacionesAula', { signal, params })
+  return res.data
+}
+
+export async function getPreferenciaInforme({ signal } = {}) {
+  const res = await http.get('/api/Informes/AsignacionesAula/preferencias', { signal })
+  return res.data
+}
+
+export async function guardarPreferenciaInforme(payload) {
+  const res = await http.put('/api/Informes/AsignacionesAula/preferencias', payload)
+  return res.data
+}
+
+export async function descargarInformePdf({ anio, mes, periodo = 'mes', materiaId, comparar = false } = {}) {
+  const params = { anio, mes, periodo, comparar }
+  if (materiaId) params.materiaId = materiaId
+  const res = await http.get('/api/Informes/AsignacionesAula/pdf', {
+    params,
+    responseType: 'blob',
   })
+  const disposicion = res.headers?.['content-disposition'] || ''
+  const coincidencia = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposicion)
+  const nombre = coincidencia?.[1]
+    ? decodeURIComponent(coincidencia[1])
+    : `informe-asignaciones-${anio}-${mes}.pdf`
+  return { blob: res.data, filename: nombre }
+}
+
+export async function getAlumnosGrupo(asignacionId, { signal } = {}) {
+  const res = await http.get(`/api/AsignacionesAula/${asignacionId}/alumnos`, { signal })
+  return res.data
+}
+
+export async function getCandidatosGrupo(asignacionId, buscar, { signal } = {}) {
+  const res = await http.get(`/api/AsignacionesAula/${asignacionId}/alumnos/candidatos`, {
+    signal,
+    params: buscar ? { buscar } : {},
+  })
+  return res.data
+}
+
+export async function vincularAlumnoGrupo(asignacionId, personaId) {
+  const res = await http.post(`/api/AsignacionesAula/${asignacionId}/alumnos`, { personaId })
+  return res.data
+}
+
+export async function darBajaAlumnoGrupo(asignacionId, personaId) {
+  const res = await http.delete(`/api/AsignacionesAula/${asignacionId}/alumnos/${personaId}`)
   return res.data
 }
 
