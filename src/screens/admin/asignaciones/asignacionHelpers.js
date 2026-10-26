@@ -53,9 +53,18 @@ export function esAbierta(estado) {
   return String(estado || '').toLowerCase() === 'abierta'
 }
 
-export function textoCupo(row) {
+export function cuposDe(row) {
   const ocupados = Number(row?.cuposOcupados ?? row?.CuposOcupados ?? 0)
   const habilitado = Number(row?.cupoHabilitado ?? row?.CupoHabilitado ?? 0)
+  const informados = row?.cuposDisponibles ?? row?.CuposDisponibles
+  const disponibles = informados == null ? Math.max(0, habilitado - ocupados) : Number(informados)
+  const completo = habilitado > 0 && ocupados >= habilitado
+  const porcentaje = habilitado > 0 ? Math.min(100, Math.round((ocupados / habilitado) * 100)) : 0
+  return { ocupados, habilitado, disponibles, completo, porcentaje }
+}
+
+export function textoCupo(row) {
+  const { ocupados, habilitado } = cuposDe(row)
   return `${ocupados} / ${habilitado}`
 }
 

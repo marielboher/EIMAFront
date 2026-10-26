@@ -1,16 +1,18 @@
-import { formatFechaHora, textoCupo } from './asignacionHelpers'
+import { AlumnosGrupoSection } from './AlumnosGrupoSection'
+import { cuposDe, formatFechaHora, textoCupo } from './asignacionHelpers'
 import '../personas/personas.css'
 import './asignacionesAula.css'
 
-export function AsignacionDetailModal({ asignacion, onClose, onCerrarAsignacion }) {
+export function AsignacionDetailModal({ asignacion, onClose, onCerrarAsignacion, onCupoActualizado }) {
   if (!asignacion) return null
 
   const abierta = String(asignacion.estado || '').toLowerCase() === 'abierta'
+  const cupo = cuposDe(asignacion)
 
   return (
     <div className="modal-backdrop" onClick={onClose} role="presentation">
       <div
-        className="detail-modal-card"
+        className="detail-modal-card asignacion-detail-card"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -63,7 +65,10 @@ export function AsignacionDetailModal({ asignacion, onClose, onCerrarAsignacion 
               </div>
               <div className="detail-item">
                 <span className="detail-label">Cupo (ocupados / habilitado)</span>
-                <span className="detail-value highlight-val">{textoCupo(asignacion)}</span>
+                <span className="detail-value highlight-val">
+                  {textoCupo(asignacion)}
+                  {cupo.completo ? ' · Cupo completo' : ` · ${cupo.disponibles} disponibles`}
+                </span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Fin de vigencia</span>
@@ -85,6 +90,8 @@ export function AsignacionDetailModal({ asignacion, onClose, onCerrarAsignacion 
               </div>
             </div>
           </div>
+
+          <AlumnosGrupoSection asignacion={asignacion} onCupoActualizado={onCupoActualizado} />
         </div>
 
         <div className="detail-footer">

@@ -19,6 +19,7 @@ import {
   fechaIsoAInput,
   inputAFechaIso,
   textoCupo,
+  cuposDe,
   claseBadgeEstado,
   esAbierta,
 } from './asignacionHelpers'
@@ -612,11 +613,7 @@ export function AsignacionesDashboard() {
                 ) : (
                   asignaciones.map((row) => {
                     const abierta = esAbierta(row.estado)
-                    const ocupados = Number(row.cuposOcupados ?? 0)
-                    const habilitado = Number(row.cupoHabilitado ?? 0)
-                    const porcentaje = habilitado > 0
-                      ? Math.min(100, Math.round((ocupados / habilitado) * 100))
-                      : 0
+                    const cupo = cuposDe(row)
                     return (
                       <tr
                         key={row.id}
@@ -636,10 +633,13 @@ export function AsignacionesDashboard() {
                           {row.docenteDni ? <div className="asigSub">DNI {row.docenteDni}</div> : null}
                         </td>
                         <td>
-                          <div className="cupoCell">
+                          <div className={`cupoCell${cupo.completo ? ' isFull' : ''}`}>
                             <span className="cupoText">{textoCupo(row)}</span>
+                            <span className="cupoDisponibles">
+                              {cupo.completo ? 'Cupo completo' : `${cupo.disponibles} disponibles`}
+                            </span>
                             <span className="cupoBar" aria-hidden="true">
-                              <span style={{ width: `${porcentaje}%` }} />
+                              <span style={{ width: `${cupo.porcentaje}%` }} />
                             </span>
                           </div>
                         </td>
@@ -702,6 +702,11 @@ export function AsignacionesDashboard() {
           asignacion={detalle}
           onClose={() => setDetalle(null)}
           onCerrarAsignacion={handleCerrar}
+          onCupoActualizado={(grupo) => {
+            if (!grupo?.id) return
+            setDetalle((prev) => (prev && prev.id === grupo.id ? { ...prev, ...grupo } : prev))
+            setAsignaciones((rows) => rows.map((row) => (row.id === grupo.id ? { ...row, ...grupo } : row)))
+          }}
         />
       )}
     </div>
