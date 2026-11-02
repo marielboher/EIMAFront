@@ -126,24 +126,27 @@ export function InformeAsignacionesPage() {
         if (seq === requestSeq.current) setLoading(false)
       })
 
+    let guardarTimer
     if (omitirGuardado.current) {
       omitirGuardado.current = false
     } else {
-      guardarPreferenciaInforme({
-        periodoTipo,
-        anio: partes.anio,
-        mes: partes.mes,
-        materiaId: materiaId ? Number(materiaId) : null,
-        comparar,
-      }).catch((error) => {
-        toastError({
-          title: 'No se pudo recordar el filtro',
-          text: mensajeErrorAsignacion(error, 'La selección no quedó guardada.'),
+      guardarTimer = setTimeout(() => {
+        guardarPreferenciaInforme({
+          periodoTipo,
+          anio: partes.anio,
+          mes: partes.mes,
+          materiaId: materiaId ? Number(materiaId) : null,
+          comparar,
+        }).catch(() => {
+          // El informe ya se muestra; recordar el filtro no debe bloquear la pantalla.
         })
-      })
+      }, 400)
     }
 
-    return () => ac.abort()
+    return () => {
+      ac.abort()
+      if (guardarTimer) clearTimeout(guardarTimer)
+    }
   }, [listo, periodo, periodoTipo, materiaId, comparar])
 
   const descargarPdf = async () => {

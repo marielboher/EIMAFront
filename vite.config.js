@@ -1,7 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+const apiProxy = {
+  '/api': {
+    target: 'https://eima.onrender.com',
+    changeOrigin: true,
+    secure: true,
+  },
+}
+
 export default defineConfig({
   plugins: [react()],
+  server: { proxy: apiProxy },
+  preview: { proxy: apiProxy },
 })

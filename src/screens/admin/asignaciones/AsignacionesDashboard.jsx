@@ -85,8 +85,15 @@ export function AsignacionesDashboard() {
     orden: normalizarOrden(vistaGuardada?.orden),
   })
   const requestSeq = useRef(0)
+  // Evita deseleccionar la vista cuando sus propios filtros se están aplicando.
+  const aplicandoVista = useRef(false)
 
   const rangoInvalido = Boolean(desde && hasta && desde > hasta)
+
+  const deseleccionarVista = () => {
+    setVistaActiva('')
+    localStorage.removeItem(CLAVE_VISTA)
+  }
 
   useEffect(() => {
     const ac = new AbortController()
@@ -139,6 +146,16 @@ export function AsignacionesDashboard() {
       prev.orden.campo === orden.campo &&
       prev.orden.direccion === orden.direccion
 
+    const filtrosCambiaron =
+      prev.search !== search ||
+      prev.filterEstado !== filterEstado ||
+      prev.filterMateria !== filterMateria ||
+      prev.filterDocente !== filterDocente ||
+      prev.desde !== desde ||
+      prev.hasta !== hasta ||
+      prev.orden.campo !== orden.campo ||
+      prev.orden.direccion !== orden.direccion
+
     filtrosPrevios.current = {
       search,
       filterEstado,
@@ -147,6 +164,12 @@ export function AsignacionesDashboard() {
       desde,
       hasta,
       orden,
+    }
+
+    if (aplicandoVista.current) {
+      aplicandoVista.current = false
+    } else if (filtrosCambiaron && vistaActiva) {
+      deseleccionarVista()
     }
 
     const t = setTimeout(() => {
@@ -219,6 +242,7 @@ export function AsignacionesDashboard() {
     setFilterDocente('todos')
     setDesde('')
     setHasta('')
+    deseleccionarVista()
   }
 
   const cambiarOrden = (campo) => {
@@ -244,14 +268,19 @@ export function AsignacionesDashboard() {
   })
 
   const aplicarVista = (id) => {
-    setVistaActiva(id)
-    const vista = vistas.find((v) => String(v.id) === String(id))
-
-    if (!vista) {
-      localStorage.removeItem(CLAVE_VISTA)
+    if (!id) {
+      deseleccionarVista()
       return
     }
 
+    const vista = vistas.find((v) => String(v.id) === String(id))
+    if (!vista) {
+      deseleccionarVista()
+      return
+    }
+
+    aplicandoVista.current = true
+    setVistaActiva(String(id))
     const filtros = vista.filtros || {}
     setSearch(filtros.buscar || '')
     setFilterEstado(filtros.estado || 'todos')
