@@ -8,7 +8,7 @@ import {
   vincularAlumnoGrupo,
 } from '../../../services/asignacionesAula'
 import { confirmDialog, toastError, toastSuccess } from '../../../lib/alerts'
-import { cuposDe, formatFechaHora } from './asignacionHelpers'
+import { cuposDe, esAbierta, formatFechaHora } from './asignacionHelpers'
 
 export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
   const [listado, setListado] = useState(null)
@@ -17,10 +17,17 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
   const [candidatos, setCandidatos] = useState([])
   const [buscando, setBuscando] = useState(false)
   const [ocupado, setOcupado] = useState(false)
+  const [candidatosTick, setCandidatosTick] = useState(0)
 
   const cupo = cuposDe(listado ?? asignacion)
-  const admiteAltas = Boolean(listado?.admiteAltas)
-  const motivo = listado?.motivoNoAdmiteAltas || (cupo.completo ? 'Cupo completo.' : null)
+  const grupoAbierto = esAbierta(asignacion?.estado)
+  const admiteAltas = grupoAbierto && Boolean(listado?.admiteAltas)
+  const admiteEdicion = grupoAbierto
+  const motivo = !grupoAbierto
+    ? 'El grupo está cerrado: no se pueden agregar ni dar de baja alumnos.'
+    : (listado?.motivoNoAdmiteAltas || (cupo.completo ? 'Cupo completo.' : null))
+
+  const refrescarCandidatos = () => setCandidatosTick((n) => n + 1)
 
   useEffect(() => {
     const ac = new AbortController()
@@ -67,7 +74,7 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
       clearTimeout(timer)
       ac.abort()
     }
-  }, [admiteAltas, asignacion.id, buscar])
+  }, [admiteAltas, asignacion.id, buscar, candidatosTick])
 
   const refrescarDesdeServidor = async () => {
     const [lista, grupo] = await Promise.all([
@@ -76,9 +83,18 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
     ])
     if (lista) setListado(lista)
     if (grupo) onCupoActualizado?.(grupo)
+    refrescarCandidatos()
   }
 
   const vincular = async (candidato) => {
+    if (!admiteEdicion) {
+      toastError({
+        title: 'Grupo cerrado',
+        text: 'No se pueden agregar alumnos a una asignación cerrada.',
+      })
+      return
+    }
+
     const confirmado = await confirmDialog({
       title: 'Vincular alumno',
       text: `Se reservará un cupo para ${candidato.nombreCompleto} (DNI ${candidato.dni}).`,
@@ -91,9 +107,12 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
     try {
       const respuesta = await vincularAlumnoGrupo(asignacion.id, candidato.personaId)
       if (respuesta.grupo) onCupoActualizado?.(respuesta.grupo)
+      // Lo saca al toque de "Agregar"; el servidor lo confirma al refrescar.
+      setCandidatos((prev) => prev.filter((c) => c.personaId !== candidato.personaId))
       const lista = await getAlumnosGrupo(asignacion.id)
       setListado(lista)
       setBuscar('')
+      refrescarCandidatos()
       toastSuccess({ text: 'Alumno vinculado. El cupo se actualizó.' })
     } catch (error) {
       toastError({
@@ -107,6 +126,14 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
   }
 
   const darBaja = async (alumno) => {
+    if (!admiteEdicion) {
+      toastError({
+        title: 'Grupo cerrado',
+        text: 'No se pueden dar de baja alumnos de una asignación cerrada.',
+      })
+      return
+    }
+
     const confirmado = await confirmDialog({
       title: 'Dar de baja del grupo',
       text: `${alumno.nombreCompleto} dejará de ocupar cupo. El vínculo queda en el histórico.`,
@@ -122,6 +149,7 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
       if (respuesta.grupo) onCupoActualizado?.(respuesta.grupo)
       const lista = await getAlumnosGrupo(asignacion.id)
       setListado(lista)
+      refrescarCandidatos()
       toastSuccess({ text: 'Baja registrada. El cupo quedó liberado.' })
     } catch (error) {
       toastError({
@@ -153,13 +181,13 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
                 <th>Alumno</th>
                 <th>DNI</th>
                 <th>Fecha de alta</th>
-                <th />
+                {admiteEdicion ? <th /> : null}
               </tr>
             </thead>
             <tbody>
               {(listado?.alumnos ?? []).length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="asigHint">Todavía no hay alumnos vinculados.</td>
+                  <td colSpan={admiteEdicion ? 4 : 3} className="asigHint">Todavía no hay alumnos vinculados.</td>
                 </tr>
               ) : (
                 listado.alumnos.map((alumno) => (
@@ -167,16 +195,18 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
                     <td>{alumno.nombreCompleto}</td>
                     <td>{alumno.dni}</td>
                     <td>{formatFechaHora(alumno.fechaAsignacion)}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn outline small"
-                        disabled={ocupado}
-                        onClick={() => darBaja(alumno)}
-                      >
-                        Baja
-                      </button>
-                    </td>
+                    {admiteEdicion ? (
+                      <td>
+                        <button
+                          type="button"
+                          className="btn outline small"
+                          disabled={ocupado}
+                          onClick={() => darBaja(alumno)}
+                        >
+                          Baja
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>
                 ))
               )}
@@ -220,7 +250,7 @@ export function AlumnosGrupoSection({ asignacion, onCupoActualizado }) {
         </div>
       ) : null}
 
-      {listado && !admiteAltas ? (
+      {!admiteEdicion || (listado && !admiteAltas) ? (
         <p className="cupoBloqueo" role="status">{motivo || 'Cupo completo.'}</p>
       ) : null}
     </div>
